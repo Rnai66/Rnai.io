@@ -2,48 +2,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase/client";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setError(error.message);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const token = await cred.user.getIdToken();
+      document.cookie = `__session=${token}; path=/; max-age=3600`;
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Signup failed";
+      setError(msg.replace("Firebase: ", "").replace(/ \(auth\/.*\)/, ""));
       setLoading(false);
-    } else {
-      setDone(true);
     }
   };
-
-  if (done) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-4xl mb-4">✉️</div>
-          <h2 className="text-xl font-semibold mb-2">Check your email</h2>
-          <p className="text-[#6a5a4a] text-sm">
-            We sent a confirmation link to <strong className="text-[#f5f0eb]">{email}</strong>.
-            Click it to activate your account.
-          </p>
-          <Link href="/auth/login" className="mt-6 inline-block text-[#D77757] text-sm hover:underline">
-            Back to login →
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

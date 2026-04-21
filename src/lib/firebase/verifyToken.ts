@@ -1,0 +1,11 @@
+import { adminAuth } from "./admin";
+
+export async function verifyToken(authHeader: string | null): Promise<string | null> {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  try {
+    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
+    return decoded.uid;
+  } catch {
+    return null;
+  }
+}

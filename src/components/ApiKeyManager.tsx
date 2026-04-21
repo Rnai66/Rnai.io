@@ -1,13 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { auth } from "@/lib/firebase/client";
 
 interface ApiKey {
   id: string;
   name: string;
-  key_prefix: string;
-  created_at: string;
-  last_used_at: string | null;
-  is_active: boolean;
+  keyPrefix: string;
+  createdAt: { seconds: number } | string;
+  lastUsedAt: { seconds: number } | string | null;
+}
+
+function formatDate(val: { seconds: number } | string | null): string {
+  if (!val) return "Never";
+  const ts = typeof val === "string" ? new Date(val) : new Date(val.seconds * 1000);
+  return ts.toLocaleDateString();
 }
 
 export default function ApiKeyManager() {
@@ -17,24 +23,40 @@ export default function ApiKeyManager() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchKeys();
-  }, []);
+  const getToken = async () => {
+    const user = auth.currentUser;
+    if (!user) return null;
+    return user.getIdToken();
+  };
 
-  const fetchKeys = async () => {
-    const res = await fetch("/api/keys");
+  const fetchKeys = useCallback(async () => {
+    const token = await getToken();
+    if (!token) return;
+    const res = await fetch("/api/keys", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     const data = await res.json();
     setKeys(data.keys ?? []);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchKeys();
+  }, [fetchKeys]);
 
   const createKey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newKeyName.trim()) return;
     setLoading(true);
 
+    const token = await getToken();
+    if (!token) return;
+
     const res = await fetch("/api/keys", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ name: newKeyName.trim() }),
     });
     const data = await res.json();
@@ -49,7 +71,12 @@ export default function ApiKeyManager() {
 
   const revokeKey = async (id: string) => {
     if (!confirm("Revoke this key? It cannot be undone.")) return;
-    await fetch(`/api/keys/${id}`, { method: "DELETE" });
+    const token = await getToken();
+    if (!token) return;
+    await fetch(`/api/keys/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
     setKeys((prev) => prev.filter((k) => k.id !== id));
   };
 
@@ -62,7 +89,6 @@ export default function ApiKeyManager() {
 
   return (
     <div className="space-y-8">
-      {/* New key created banner */}
       {createdKey && (
         <div className="p-4 rounded-xl bg-green-900/20 border border-green-800/40">
           <p className="text-sm text-green-400 font-medium mb-2">
@@ -88,7 +114,6 @@ export default function ApiKeyManager() {
         </div>
       )}
 
-      {/* Create key form */}
       <div>
         <h2 className="text-lg font-semibold mb-4">Create API Key</h2>
         <form onSubmit={createKey} className="flex gap-3">
@@ -109,7 +134,6 @@ export default function ApiKeyManager() {
         </form>
       </div>
 
-      {/* Keys list */}
       <div>
         <h2 className="text-lg font-semibold mb-4">
           Your API Keys
@@ -129,12 +153,10 @@ export default function ApiKeyManager() {
               >
                 <div>
                   <p className="font-medium text-sm text-[#f5f0eb]">{key.name}</p>
-                  <code className="text-xs text-[#6a5a4a] font-mono">{key.key_prefix}</code>
+                  <code className="text-xs text-[#6a5a4a] font-mono">{key.keyPrefix}</code>
                   <p className="text-xs text-[#4a3a2a] mt-1">
-                    Created {new Date(key.created_at).toLocaleDateString()}
-                    {key.last_used_at && (
-                      <> · Last used {new Date(key.last_used_at).toLocaleDateString()}</>
-                    )}
+                    Created {formatDate(key.createdAt)}
+                    {key.lastUsedAt && <> · Last used {formatDate(key.lastUsedAt)}</>}
                   </p>
                 </div>
                 <button

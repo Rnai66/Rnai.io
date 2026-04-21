@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey } from "@/lib/auth/validateKey";
+import { validateApiKey } from "@/lib/firebase/validateKey";
 import { editImage } from "@/lib/ai/huggingface";
 
 export async function POST(req: NextRequest) {

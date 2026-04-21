@@ -1,22 +1,24 @@
 "use client";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { auth } from "@/lib/firebase/client";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email ?? null);
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setEmail(user?.email ?? null);
     });
+    return unsub;
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const handleSignOut = async () => {
+    await signOut(auth);
+    document.cookie = "__session=; path=/; max-age=0";
     router.push("/");
     router.refresh();
   };
@@ -30,14 +32,11 @@ export default function Navbar() {
         <div className="flex items-center gap-4 text-sm">
           {email ? (
             <>
-              <Link
-                href="/dashboard"
-                className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors"
-              >
+              <Link href="/dashboard" className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors">
                 Dashboard
               </Link>
               <button
-                onClick={signOut}
+                onClick={handleSignOut}
                 className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors"
               >
                 Sign out
@@ -45,10 +44,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link
-                href="/auth/login"
-                className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors"
-              >
+              <Link href="/auth/login" className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors">
                 Login
               </Link>
               <Link

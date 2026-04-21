@@ -1,26 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { verifyToken } from "@/lib/firebase/verifyToken";
+import { adminDb } from "@/lib/firebase/admin";
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const uid = await verifyToken(req.headers.get("authorization"));
+  if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  const ref = adminDb.collection("apiKeys").doc(id);
+  const doc = await ref.get();
 
-  const { error } = await supabase
-    .from("api_keys")
-    .update({ is_active: false })
-    .eq("id", id)
-    .eq("user_id", user.id);
+  if (!doc.exists || doc.data()?.userId !== uid) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
+  await ref.update({ isActive: false });
   return NextResponse.json({ success: true });
 }
