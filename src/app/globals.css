@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #141210;
+  color: #f5f0eb;
+}
+
+::selection {
+  background: #D77757;
+  color: #fff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3530 #1e1b18;
+}
