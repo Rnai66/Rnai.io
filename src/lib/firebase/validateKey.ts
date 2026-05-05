@@ -1,12 +1,12 @@
 import { createHash } from "crypto";
-import { adminDb } from "./admin";
+import { getAdminDb } from "./admin";
 
-export async function validateApiKey(key: string): Promise<string | null> {
+export async function validateApiKey(key: string): Promise<{ id: string, userId: string } | null> {
   if (!key?.startsWith("rnai_sk_")) return null;
 
   const keyHash = createHash("sha256").update(key).digest("hex");
 
-  const snap = await adminDb
+  const snap = await getAdminDb()
     .collection("apiKeys")
     .where("keyHash", "==", keyHash)
     .where("isActive", "==", true)
@@ -17,5 +17,5 @@ export async function validateApiKey(key: string): Promise<string | null> {
 
   const doc = snap.docs[0];
   await doc.ref.update({ lastUsedAt: new Date() });
-  return doc.id;
+  return { id: doc.id, userId: doc.data().userId };
 }

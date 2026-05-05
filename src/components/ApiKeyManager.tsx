@@ -1,175 +1,168 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase/client";
 
 interface ApiKey {
   id: string;
   name: string;
-  keyPrefix: string;
-  createdAt: { seconds: number } | string;
-  lastUsedAt: { seconds: number } | string | null;
-}
-
-function formatDate(val: { seconds: number } | string | null): string {
-  if (!val) return "Never";
-  const ts = typeof val === "string" ? new Date(val) : new Date(val.seconds * 1000);
-  return ts.toLocaleDateString();
+  createdAt: string;
+  lastUsedAt: string | null;
+  isActive: boolean;
 }
 
 export default function ApiKeyManager() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const getToken = async () => {
-    const user = auth.currentUser;
-    if (!user) return null;
-    return user.getIdToken();
-  };
-
-  const fetchKeys = useCallback(async () => {
-    const token = await getToken();
-    if (!token) return;
-    const res = await fetch("/api/keys", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setKeys(data.keys ?? []);
-  }, []);
 
   useEffect(() => {
     fetchKeys();
-  }, [fetchKeys]);
+  }, []);
+
+  const fetchKeys = async () => {
+    try {
+      const res = await fetch("/api/keys");
+      const data = await res.json();
+      if (res.ok) {
+        setKeys(data.keys);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const createKey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newKeyName.trim()) return;
-    setLoading(true);
 
-    const token = await getToken();
-    if (!token) return;
-
-    const res = await fetch("/api/keys", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name: newKeyName.trim() }),
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      setCreatedKey(data.key);
-      setNewKeyName("");
-      fetchKeys();
+    try {
+      const res = await fetch("/api/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newKeyName }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCreatedKey(data.key);
+        setNewKeyName("");
+        fetchKeys();
+      }
+    } catch (error) {
+      console.error(error);
     }
-    setLoading(false);
   };
 
-  const revokeKey = async (id: string) => {
-    if (!confirm("Revoke this key? It cannot be undone.")) return;
-    const token = await getToken();
-    if (!token) return;
-    await fetch(`/api/keys/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setKeys((prev) => prev.filter((k) => k.id !== id));
-  };
-
-  const copyKey = () => {
-    if (!createdKey) return;
-    navigator.clipboard.writeText(createdKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const deleteKey = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this API key? This cannot be undone.")) return;
+    try {
+      await fetch(`/api/keys/${id}`, { method: "DELETE" });
+      fetchKeys();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
-    <div className="space-y-8">
+    <div>
+      <div className="mb-8">
+        <h2 className="text-xl font-outfit font-bold text-white mb-2">API Keys</h2>
+        <p className="text-sm text-gray-400">Generate API keys to authenticate your API requests.</p>
+      </div>
+
       {createdKey && (
-        <div className="p-4 rounded-xl bg-green-900/20 border border-green-800/40">
-          <p className="text-sm text-green-400 font-medium mb-2">
-            ✓ API key created — copy it now. It will not be shown again.
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs font-mono bg-[#141210] px-3 py-2 rounded-lg text-green-300 overflow-x-auto">
+        <div className="mb-8 p-6 bg-[#D77757]/10 border border-[#D77757]/30 rounded-2xl animate-fade-in relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-[#D77757]"></div>
+          <h3 className="text-[#D77757] font-bold mb-2">Save your new API key!</h3>
+          <p className="text-sm text-gray-300 mb-4">Please copy this key and save it somewhere safe. You won't be able to see it again.</p>
+          <div className="flex gap-2">
+            <code className="flex-1 bg-black/50 border border-white/10 p-3 rounded-lg text-sm text-green-400 break-all">
               {createdKey}
             </code>
             <button
-              onClick={copyKey}
-              className="px-3 py-2 text-xs bg-green-800/40 hover:bg-green-800/60 text-green-300 rounded-lg transition-colors whitespace-nowrap"
+              onClick={() => {
+                navigator.clipboard.writeText(createdKey);
+                alert("Copied to clipboard!");
+              }}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
             >
-              {copied ? "Copied!" : "Copy"}
+              Copy
             </button>
           </div>
-          <button
+          <button 
             onClick={() => setCreatedKey(null)}
-            className="mt-2 text-xs text-green-700 hover:text-green-500 transition-colors"
+            className="mt-4 text-xs text-gray-400 hover:text-white"
           >
-            Dismiss
+            I have saved it
           </button>
         </div>
       )}
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Create API Key</h2>
-        <form onSubmit={createKey} className="flex gap-3">
-          <input
-            type="text"
-            value={newKeyName}
-            onChange={(e) => setNewKeyName(e.target.value)}
-            placeholder="Key name (e.g. Muse Style Studio 3)"
-            className="flex-1 px-4 py-2.5 bg-[#1e1b18] border border-[#2a2520] rounded-lg text-[#f5f0eb] text-sm focus:outline-none focus:border-[#D77757]/60 placeholder-[#4a3a2a]"
-          />
-          <button
-            type="submit"
-            disabled={loading || !newKeyName.trim()}
-            className="px-5 py-2.5 bg-[#D77757] text-white rounded-lg font-medium text-sm hover:bg-[#c0664a] disabled:opacity-50 transition-colors whitespace-nowrap"
-          >
-            {loading ? "Creating..." : "Create Key"}
-          </button>
-        </form>
-      </div>
+      <form onSubmit={createKey} className="flex gap-3 mb-8">
+        <input
+          type="text"
+          value={newKeyName}
+          onChange={(e) => setNewKeyName(e.target.value)}
+          placeholder="e.g. Production Server"
+          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 focus:border-[#D77757]/50 transition-all text-sm"
+        />
+        <button
+          type="submit"
+          disabled={!newKeyName.trim()}
+          className="px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
+        >
+          Create Key
+        </button>
+      </form>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">
-          Your API Keys
-          <span className="ml-2 text-sm font-normal text-[#6a5a4a]">({keys.length})</span>
-        </h2>
-
-        {keys.length === 0 ? (
-          <div className="text-center py-12 rounded-xl border border-dashed border-[#2a2520] text-[#4a3a2a] text-sm">
-            No keys yet. Create your first key above.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {keys.map((key) => (
-              <div
-                key={key.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-[#1e1b18] border border-[#2a2520]"
-              >
-                <div>
-                  <p className="font-medium text-sm text-[#f5f0eb]">{key.name}</p>
-                  <code className="text-xs text-[#6a5a4a] font-mono">{key.keyPrefix}</code>
-                  <p className="text-xs text-[#4a3a2a] mt-1">
-                    Created {formatDate(key.createdAt)}
-                    {key.lastUsedAt && <> · Last used {formatDate(key.lastUsedAt)}</>}
-                  </p>
-                </div>
-                <button
-                  onClick={() => revokeKey(key.id)}
-                  className="text-xs text-[#6a5a4a] hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-900/20"
-                >
-                  Revoke
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="py-8 flex justify-center">
+          <div className="w-5 h-5 border-2 border-[#D77757] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : keys.length === 0 ? (
+        <div className="text-center py-12 bg-black/20 rounded-2xl border border-white/5 border-dashed">
+          <p className="text-sm text-gray-400">You don't have any API keys yet.</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-white/5 bg-black/30">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
+              <tr>
+                <th className="px-6 py-4 font-medium">Name / ID</th>
+                <th className="px-6 py-4 font-medium hidden sm:table-cell">Created</th>
+                <th className="px-6 py-4 font-medium hidden md:table-cell">Last Used</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {keys.map((key) => (
+                <tr key={key.id} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-white mb-1">{key.name}</div>
+                    <div className="text-xs font-mono text-gray-500">{key.id.substring(0, 12)}...</div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-400 hidden sm:table-cell">
+                    {new Date(key.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 text-gray-400 hidden md:table-cell">
+                    {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => deleteKey(key.id)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-400/10 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium"
+                    >
+                      Revoke
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,9 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #141210;
-  color: #f5f0eb;
+@layer base {
+  body {
+    @apply bg-[#050505] text-gray-100;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500;
+  }
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)];
+  }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
 }
 
 ::selection {
@@ -14,5 +27,5 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3a3530 #1e1b18;
+  scrollbar-color: #333 #0a0a0a;
 }

@@ -18,45 +18,48 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     await signOut(auth);
-    document.cookie = "__session=; path=/; max-age=0";
+    await fetch("/api/auth/session", { method: "DELETE" });
     router.push("/");
     router.refresh();
   };
 
   return (
-    <nav className="border-b border-[#1e1b18] px-6 py-4">
-      <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <Link href="/" className="font-bold text-lg tracking-tight">
-          Rnai<span className="text-[#D77757]">.</span>io
+    <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-center pointer-events-none">
+      <nav className="pointer-events-auto glass-card rounded-full px-6 py-3 w-full max-w-5xl flex items-center justify-between transition-all duration-300">
+        <Link href="/" className="font-outfit font-bold text-xl tracking-tight text-white flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D77757] to-[#8a4b35] flex items-center justify-center shadow-lg shadow-[#D77757]/20 group-hover:scale-105 transition-transform">
+            <span className="text-white text-sm font-black">R</span>
+          </div>
+          Rnai<span className="text-[#D77757]">.io</span>
         </Link>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-6 text-sm font-medium">
           {email ? (
             <>
-              <Link href="/dashboard" className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors">
+              <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
                 Dashboard
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 Sign out
               </button>
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="text-[#8a7a6a] hover:text-[#f5f0eb] transition-colors">
-                Login
+              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
+                Log in
               </Link>
               <Link
                 href="/auth/signup"
-                className="px-4 py-1.5 bg-[#D77757] text-white rounded-lg hover:bg-[#c0664a] transition-colors font-medium"
+                className="px-5 py-2 bg-white text-black rounded-full hover:bg-gray-200 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform duration-200"
               >
                 Get Started
               </Link>
             </>
           )}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
