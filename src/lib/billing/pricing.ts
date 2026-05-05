@@ -8,7 +8,9 @@ export type SkillName =
   | "text/summarize"
   | "text/translate"
   | "text/rewrite"
-  | "text/extract";
+  | "text/extract"
+  | "audio/tts"
+  | "audio/stt";
 
 export const PRICING: Record<SkillName, number> = {
   "image/generate": 5,
@@ -21,6 +23,8 @@ export const PRICING: Record<SkillName, number> = {
   "text/translate": 1,
   "text/rewrite": 1,
   "text/extract": 1,
+  "audio/tts": 10,
+  "audio/stt": 5,
 };
 
 export function getCost(skill: SkillName): number {

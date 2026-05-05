@@ -8,5 +8,10 @@ export interface Provider {
   
   // Text Skills
   generateText?: (prompt: string, systemPrompt?: string) => Promise<string>;
-  // Future skills (audio, video) will be added here
+
+  // Audio Skills
+  generateAudio?: (text: string) => Promise<Buffer>;
+  transcribeAudio?: (audioBase64: string) => Promise<string>;
+
+  // Future skills (video) will be added here
 }

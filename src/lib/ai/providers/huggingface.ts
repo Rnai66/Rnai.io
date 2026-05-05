@@ -76,5 +76,17 @@ export const HuggingFaceProvider: Provider = {
     });
     if (!res.ok) throw new Error(`HF error: ${await res.text()}`);
     return Buffer.from(await res.arrayBuffer());
+  },
+
+  async generateAudio(text: string) {
+    // Using facebook/mms-tts-eng for high quality free TTS
+    const res = await fetch(`${HF_API}/facebook/mms-tts-eng`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ inputs: text }),
+    });
+
+    if (!res.ok) throw new Error(`HF TTS error: ${await res.text()}`);
+    return Buffer.from(await res.arrayBuffer());
   }
 };

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
@@ -16,7 +16,7 @@ const TOPUP_PACKS = [
   { id: "pack_100", name: "Enterprise", price: 100, credits: 13500, popular: false },
 ];
 
-export default function BillingPage() {
+function BillingPageContent() {
   const [email, setEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [billing, setBilling] = useState<BillingData | null>(null);
@@ -171,5 +171,13 @@ export default function BillingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#050505] flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#D77757] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <BillingPageContent />
+    </Suspense>
   );
 }

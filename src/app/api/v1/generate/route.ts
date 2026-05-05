@@ -6,6 +6,7 @@ import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
 import { chargeCredits } from "@/lib/billing/credits";
 import { uploadToStorage } from "@/lib/storage";
+import { generateInputHash, getCachedResult, setCachedResult } from "@/lib/cache";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,6 +42,22 @@ export async function POST(req: NextRequest) {
 
     const cost = getCost("image/generate");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+
+    // Cache Check
+    const inputHash = generateInputHash({ prompt });
+    const cached = await getCachedResult<{ url: string; format: string }>("image/generate", inputHash);
+
+    if (cached) {
+      await getAdminDb().collection("usageLogs").doc(refId).set({
+        uid: keyData.userId,
+        apiKeyId: keyData.id,
+        skill: "image/generate",
+        status: "cached",
+        outputUrl: cached.url,
+        createdAt: new Date(),
+      });
+      return NextResponse.json(cached);
+    }
     
     const successCharge = await chargeCredits(keyData.userId, cost, refId);
     if (!successCharge) {
@@ -52,6 +69,10 @@ export async function POST(req: NextRequest) {
     const latencyMs = Date.now() - startTime;
 
     const url = await uploadToStorage(buf, refId, "png");
+    const result = { url, format: "png" };
+
+    // Set Cache
+    await setCachedResult("image/generate", inputHash, result);
 
     await getAdminDb().collection("usageLogs").doc(refId).set({
       uid: keyData.userId,
@@ -65,7 +86,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
     });
 
-    return NextResponse.json({ url, format: "png" });
+    return NextResponse.json(result);
   } catch (err) {
     console.error("API /v1/generate error:", err);
     return NextResponse.json(
