@@ -38,6 +38,8 @@ type SkillConfig = {
   needsWebsiteType?: boolean;
   needsTemplate?: boolean;
   needsDescription?: boolean;
+  needsWebsiteCustomPrompt?: boolean;
+  needsWebsiteImage?: boolean;
 };
 
 const SKILLS: SkillConfig[] = [
@@ -53,7 +55,7 @@ const SKILLS: SkillConfig[] = [
   { id: "text/extract", label: "Text Extract", category: "Text", credits: 1, needsText: true, needsSchema: true },
   { id: "audio/tts", label: "Text to Speech", category: "Audio", credits: 10, needsText: true },
   { id: "audio/stt", label: "Speech to Text", category: "Audio", credits: 5, needsAudio: true },
-  { id: "website/generate", label: "Website Generate", category: "Website", credits: 10, needsWebsiteName: true, needsWebsiteType: true, needsTemplate: true, needsDescription: true },
+  { id: "website/generate", label: "Website Generate", category: "Website", credits: 10, needsWebsiteName: true, needsWebsiteType: true, needsTemplate: true, needsDescription: true, needsWebsiteCustomPrompt: true, needsWebsiteImage: true },
 ];
 
 type RunResult = {
@@ -194,6 +196,9 @@ export default function PlaygroundPage() {
   const [websiteType, setWebsiteType] = useState("ecommerce");
   const [template, setTemplate] = useState("modern");
   const [description, setDescription] = useState("");
+  const [websiteCustomPrompt, setWebsiteCustomPrompt] = useState("");
+  const [websiteImage, setWebsiteImage] = useState("");
+  const [websiteImageUsage, setWebsiteImageUsage] = useState<"design-reference" | "background" | "logo">("design-reference");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const [error, setError] = useState("");
@@ -259,6 +264,11 @@ export default function PlaygroundPage() {
     if (skill.needsWebsiteType) payload.websiteType = websiteType;
     if (skill.needsTemplate) payload.template = template;
     if (skill.needsDescription) payload.description = description;
+    if (skill.needsWebsiteCustomPrompt) payload.websiteCustomPrompt = websiteCustomPrompt;
+    if (skill.needsWebsiteImage) {
+      payload.websiteImage = websiteImage;
+      payload.websiteImageUsage = websiteImageUsage;
+    }
 
     try {
       const res = await fetch("/api/playground/run", {
@@ -608,6 +618,60 @@ export default function PlaygroundPage() {
                     placeholder="อธิบายรายละเอียดของเวบไซด์ที่ต้องการ..."
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                   />
+                </div>
+              )}
+
+              {skill.needsWebsiteCustomPrompt && (
+                <div>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Custom Prompt (Optional)</label>
+                  <textarea
+                    value={websiteCustomPrompt}
+                    onChange={(event) => setWebsiteCustomPrompt(event.target.value)}
+                    rows={3}
+                    placeholder="ป้อนคำสั่ง custom เพิ่มเติมเพื่อปรับแต่งการสร้างเว็บไซด์ (จะผสมกับ Description)..."
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
+                  />
+                </div>
+              )}
+
+              {skill.needsWebsiteImage && (
+                <div>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Reference Image (Optional)</label>
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (file) setWebsiteImage(await fileToDataUrl(file));
+                      }}
+                      className="block w-full text-sm text-gray-300 file:mr-4 file:rounded-lg file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-white/20"
+                    />
+                    {websiteImage && (
+                      <div className="space-y-2">
+                        <label className="block text-xs text-gray-400 uppercase tracking-wider font-semibold">How to use this image:</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(["design-reference", "background", "logo"] as const).map((usage) => (
+                            <label key={usage} className="flex items-center gap-2 p-2 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5">
+                              <input
+                                type="radio"
+                                name="imageUsage"
+                                value={usage}
+                                checked={websiteImageUsage === usage}
+                                onChange={(e) => setWebsiteImageUsage(e.target.value as typeof websiteImageUsage)}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm text-white">
+                                {usage === "design-reference" && "Design Ref"}
+                                {usage === "background" && "Background"}
+                                {usage === "logo" && "Logo"}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

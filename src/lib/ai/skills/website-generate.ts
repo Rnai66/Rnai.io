@@ -6,10 +6,13 @@ interface WebsiteGenerationParams {
   template: string;
   description: string;
   language?: string;
+  customPrompt?: string;
+  referenceImage?: string;
+  imageUsage?: "design-reference" | "background" | "logo";
 }
 
 export async function websiteGenerateSkill(params: WebsiteGenerationParams) {
-  const { websiteName, websiteType, template, description, language = "th" } = params;
+  const { websiteName, websiteType, template, description, language = "th", customPrompt, referenceImage, imageUsage = "design-reference" } = params;
 
   // Validate API keys are configured
   if (!process.env.OPENROUTER_API_KEY && !process.env.TOGETHER_API_KEY) {
@@ -17,6 +20,27 @@ export async function websiteGenerateSkill(params: WebsiteGenerationParams) {
       "Website generation service is not configured. Please set OPENROUTER_API_KEY or TOGETHER_API_KEY environment variables."
     );
   }
+
+  // Build reference image context if provided
+  let imageContext = "";
+  if (referenceImage) {
+    imageContext = `
+**Reference Image:**
+Use the provided image as ${
+  imageUsage === "design-reference"
+    ? "design inspiration (colors, layout, style, typography)"
+    : imageUsage === "background"
+      ? "the background image for the hero or main section"
+      : "the logo or brand image (place it in header)"
+}
+Image (base64): ${referenceImage.substring(0, 50)}...
+`;
+  }
+
+  // Combine description with custom prompt
+  const fullDescription = customPrompt
+    ? `${description}\n\nAdditional Custom Instructions:\n${customPrompt}`
+    : description;
 
   // Build detailed prompt for AI to generate complete HTML website
   const prompt = `
@@ -26,8 +50,9 @@ You are a professional web developer. Generate a complete, beautiful, and functi
 - Name: ${websiteName}
 - Type: ${websiteType}
 - Template Style: ${template}
-- Description: ${description}
+- Description: ${fullDescription}
 - Language: ${language === 'th' ? 'Thai' : 'English'}
+${imageContext}
 
 **Requirements:**
 1. Create a complete HTML5 file with embedded CSS (in <style> tag)
@@ -44,6 +69,7 @@ You are a professional web developer. Generate a complete, beautiful, and functi
 7. Use semantic HTML
 8. Make all text content in ${language === 'th' ? 'Thai language' : 'English'}
 9. Include proper meta tags and responsive viewport settings
+${referenceImage && imageUsage === "background" ? "10. Integrate the reference image as a background in the hero section\n" : ""}${referenceImage && imageUsage === "logo" ? "10. Include the reference image as the logo in the header\n" : ""}
 
 **Output Format:**
 Return ONLY the complete HTML code starting with <!DOCTYPE html> and ending with </html>. No explanations, no markdown, just the pure HTML code.

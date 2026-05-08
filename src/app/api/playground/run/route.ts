@@ -35,7 +35,7 @@ const schemas: Record<PlaygroundSkill, JsonSchema> = {
   "text/extract": { skill: requiredString(), text: requiredString({ min: 1, max: 50000 }), schema: requiredString({ min: 1, max: 4000 }) },
   "audio/tts": { skill: requiredString(), text: requiredString({ min: 1, max: 5000 }) },
   "audio/stt": { skill: requiredString(), audio: base64AudioRule },
-  "website/generate": { skill: requiredString(), websiteName: requiredString({ min: 1, max: 100 }), websiteType: requiredString({ min: 1, max: 50 }), template: requiredString({ min: 1, max: 50 }), description: requiredString({ min: 1, max: 5000 }) },
+  "website/generate": { skill: requiredString(), websiteName: requiredString({ min: 1, max: 100 }), websiteType: requiredString({ min: 1, max: 50 }), template: requiredString({ min: 1, max: 50 }), description: requiredString({ min: 1, max: 5000 }), websiteCustomPrompt: optionalString({ max: 3000 }), websiteImage: optionalString(), websiteImageUsage: optionalString({ max: 20, defaultValue: "design-reference" }) },
 };
 
 function isPlaygroundSkill(skill: string): skill is PlaygroundSkill {
@@ -105,6 +105,9 @@ async function executeSkill(skill: PlaygroundSkill, data: Record<string, string>
         template: data.template,
         description: data.description,
         language: "th",
+        customPrompt: data.websiteCustomPrompt,
+        referenceImage: data.websiteImage,
+        imageUsage: data.websiteImageUsage as "design-reference" | "background" | "logo",
       });
       return { response: { text: result.html, format: "html" }, provider };
     }
