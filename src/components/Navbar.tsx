@@ -5,15 +5,20 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { translations } from "@/lib/i18n/translations";
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { language } = useLanguage();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setEmail(user?.email ?? null);
     });
+    setMounted(true);
     return unsub;
   }, []);
 
@@ -23,6 +28,10 @@ export default function Navbar() {
     router.push("/");
     router.refresh();
   };
+
+  if (!mounted) return null;
+
+  const t = translations[language];
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-center pointer-events-none">
@@ -37,19 +46,19 @@ export default function Navbar() {
           {email ? (
             <>
               <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
-                Dashboard
+                {t.nav.dashboard}
               </Link>
               <Link href="/dashboard/playground" className="text-gray-300 hover:text-white transition-colors">
-                Playground
+                {t.nav.playground}
               </Link>
               <Link href="/dashboard/profile" className="text-gray-300 hover:text-white transition-colors">
-                Profile
+                {t.nav.profile}
               </Link>
               <button
                 onClick={handleSignOut}
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                Sign out
+                {t.nav.signOut}
               </button>
               <div className="h-6 w-px bg-white/10"></div>
               <LanguageSwitcher />
@@ -57,13 +66,13 @@ export default function Navbar() {
           ) : (
             <>
               <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
-                Log in
+                {t.nav.logIn}
               </Link>
               <Link
                 href="/auth/signup"
                 className="px-5 py-2 bg-white text-black rounded-full hover:bg-gray-200 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform duration-200"
               >
-                Get Started
+                {t.nav.getStarted}
               </Link>
               <div className="h-6 w-px bg-white/10"></div>
               <LanguageSwitcher />

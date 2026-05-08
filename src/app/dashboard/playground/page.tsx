@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { translations } from "@/lib/i18n/translations";
 
 type SkillId =
   | "image/generate"
@@ -208,8 +210,30 @@ export default function PlaygroundPage() {
     { role: "assistant", text: "Ask me anything. Gemini chat is free for signed-in users." },
   ]);
   const router = useRouter();
+  const { language } = useLanguage();
+
+  const t = translations[language];
 
   const skill = useMemo(() => SKILLS.find((item) => item.id === skillId) || SKILLS[0], [skillId]);
+
+  const getSkillLabel = (id: SkillId) => {
+    const skillLabelMap: Record<SkillId, string> = {
+      "image/generate": t.playground.imageGenerate,
+      "image/remove-background": t.playground.removeBackground,
+      "image/upscale": t.playground.imageUpscale,
+      "image/stylize": t.playground.imageStylize,
+      "image/edit": t.playground.imageEdit,
+      "text/generate": t.playground.textGenerate,
+      "text/summarize": t.playground.textSummarize,
+      "text/translate": t.playground.textTranslate,
+      "text/rewrite": t.playground.textRewrite,
+      "text/extract": t.playground.textExtract,
+      "audio/tts": t.playground.audioTts,
+      "audio/stt": t.playground.audioStt,
+      "website/generate": t.playground.websiteGenerate,
+    };
+    return skillLabelMap[id] || "Unknown";
+  };
 
   const promptWithAttachments = useMemo(() => {
     if (promptAttachments.length === 0) return prompt;
@@ -328,14 +352,14 @@ export default function PlaygroundPage() {
       <main className="max-w-6xl mx-auto px-6 w-full">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-outfit font-bold text-white tracking-tight">AI Playground</h1>
-            <p className="text-sm text-gray-400 mt-1.5">Run Rnai skills from your account and chat with Gemini for free.</p>
+            <h1 className="text-3xl font-outfit font-bold text-white tracking-tight">{t.playground.title}</h1>
+            <p className="text-sm text-gray-400 mt-1.5">{t.playground.subtitle}</p>
           </div>
           <button
             onClick={() => router.push("/dashboard")}
             className="text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
           >
-            Back to Dashboard
+            {t.common.backToDashboard}
           </button>
         </div>
 
@@ -343,7 +367,7 @@ export default function PlaygroundPage() {
           <section className="glass-card rounded-3xl p-6 md:p-8">
             <div className="grid gap-5">
               <div>
-                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Function</label>
+                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.function}</label>
                 <select
                   value={skillId}
                   onChange={(event) => {
@@ -357,7 +381,7 @@ export default function PlaygroundPage() {
                     <optgroup key={category} label={category}>
                       {SKILLS.filter((item) => item.category === category).map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.label} - {item.credits} credits
+                          {getSkillLabel(item.id)} - {item.credits} {t.common.credits}
                         </option>
                       ))}
                     </optgroup>
@@ -367,11 +391,11 @@ export default function PlaygroundPage() {
 
               {skill.needsPrompt && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Prompt</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.prompt}</label>
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-white">Popular Templates</p>
-                      <p className="text-xs text-gray-500">Click to fill prompt</p>
+                      <p className="text-sm font-medium text-white">{t.playground.popularTemplates}</p>
+                      <p className="text-xs text-gray-500">{t.playground.clickToFill}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
                       {PROMPT_TEMPLATES.map((template) => (
@@ -403,16 +427,16 @@ export default function PlaygroundPage() {
                     onChange={(event) => setPrompt(event.target.value)}
                     rows={4}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
-                    placeholder="Describe what you want to generate..."
+                    placeholder={t.playground.promptPlaceholder}
                   />
                   <div className="mt-3 rounded-xl border border-white/10 bg-black/25 p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
-                        <p className="text-sm font-medium text-white">Prompt Attachments</p>
-                        <p className="text-xs text-gray-500 mt-1">Text files are added to the prompt. Images and other binary files are metadata only unless the selected function has its own image upload field.</p>
+                        <p className="text-sm font-medium text-white">{t.playground.promptAttachments}</p>
+                        <p className="text-xs text-gray-500 mt-1">{t.playground.attachmentsHelp}</p>
                       </div>
                       <label className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
-                        Add Files
+                        {t.common.addFiles}
                         <input
                           type="file"
                           multiple
@@ -445,14 +469,14 @@ export default function PlaygroundPage() {
                             <div className="min-w-0">
                               <p className="truncate text-sm text-gray-200">{file.name}</p>
                               <p className="text-xs text-gray-500">
-                                {file.readable ? "text included" : "metadata only"} · {formatBytes(file.size)}
+                                {file.readable ? t.playground.textIncluded : t.playground.metadataOnly} · {formatBytes(file.size)}
                               </p>
                             </div>
                             <button
                               onClick={() => setPromptAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                               className="shrink-0 rounded-md px-2 py-1 text-xs text-red-300 hover:bg-red-500/10"
                             >
-                              Remove
+                              {t.common.remove}
                             </button>
                           </div>
                         ))}
@@ -464,13 +488,13 @@ export default function PlaygroundPage() {
 
               {skill.needsText && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Text</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.text}</label>
                   <textarea
                     value={text}
                     onChange={(event) => setText(event.target.value)}
                     rows={6}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
-                    placeholder="Paste or write text here..."
+                    placeholder={t.playground.textPlaceholder}
                   />
                 </div>
               )}
@@ -478,7 +502,7 @@ export default function PlaygroundPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {skill.needsTargetLanguage && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Target Language</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.targetLanguage}</label>
                     <input
                       value={targetLanguage}
                       onChange={(event) => setTargetLanguage(event.target.value)}
@@ -489,7 +513,7 @@ export default function PlaygroundPage() {
 
                 {skill.needsTone && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Tone</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.tone}</label>
                     <input
                       value={tone}
                       onChange={(event) => setTone(event.target.value)}
@@ -501,7 +525,7 @@ export default function PlaygroundPage() {
 
               {skill.needsSchema && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Extraction Schema</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.extractionSchema}</label>
                   <textarea
                     value={schema}
                     onChange={(event) => setSchema(event.target.value)}
@@ -515,7 +539,7 @@ export default function PlaygroundPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {skill.needsImage && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Image</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.image}</label>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
@@ -530,7 +554,7 @@ export default function PlaygroundPage() {
 
                 {skill.needsMask && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Mask</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.mask}</label>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
@@ -545,7 +569,7 @@ export default function PlaygroundPage() {
 
                 {skill.needsAudio && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Audio</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.audio}</label>
                     <input
                       type="file"
                       accept="audio/wav,audio/mpeg,audio/mp3,audio/webm,audio/ogg"
@@ -561,12 +585,12 @@ export default function PlaygroundPage() {
 
               {skill.needsWebsiteName && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Website Name</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.websiteName}</label>
                   <input
                     type="text"
                     value={websiteName}
                     onChange={(event) => setWebsiteName(event.target.value)}
-                    placeholder="เช่น ร้านกาแฟ AromaBean"
+                    placeholder={t.playground.websiteNamePlaceholder}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                   />
                 </div>
@@ -575,34 +599,34 @@ export default function PlaygroundPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {skill.needsWebsiteType && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Website Type</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.websiteType}</label>
                     <select
                       value={websiteType}
                       onChange={(event) => setWebsiteType(event.target.value)}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                     >
-                      <option value="ecommerce">E-Commerce</option>
-                      <option value="blog">Blog</option>
-                      <option value="portfolio">Portfolio</option>
-                      <option value="service">Service</option>
-                      <option value="restaurant">Restaurant</option>
-                      <option value="saas">SaaS</option>
+                      <option value="ecommerce">{t.playground.websiteTypeEcommerce}</option>
+                      <option value="blog">{t.playground.websiteTypeBlog}</option>
+                      <option value="portfolio">{t.playground.websiteTypePortfolio}</option>
+                      <option value="service">{t.playground.websiteTypeService}</option>
+                      <option value="restaurant">{t.playground.websiteTypeRestaurant}</option>
+                      <option value="saas">{t.playground.websiteTypeSaas}</option>
                     </select>
                   </div>
                 )}
 
                 {skill.needsTemplate && (
                   <div>
-                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Template Style</label>
+                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.templateStyle}</label>
                     <select
                       value={template}
                       onChange={(event) => setTemplate(event.target.value)}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                     >
-                      <option value="modern">Modern</option>
-                      <option value="minimal">Minimal</option>
-                      <option value="bold">Bold</option>
-                      <option value="elegant">Elegant</option>
+                      <option value="modern">{t.playground.templateModern}</option>
+                      <option value="minimal">{t.playground.templateMinimal}</option>
+                      <option value="bold">{t.playground.templateBold}</option>
+                      <option value="elegant">{t.playground.templateElegant}</option>
                     </select>
                   </div>
                 )}
@@ -610,12 +634,12 @@ export default function PlaygroundPage() {
 
               {skill.needsDescription && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Description</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.description}</label>
                   <textarea
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     rows={4}
-                    placeholder="อธิบายรายละเอียดของเวบไซด์ที่ต้องการ..."
+                    placeholder={t.playground.descriptionPlaceholder}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                   />
                 </div>
@@ -623,12 +647,12 @@ export default function PlaygroundPage() {
 
               {skill.needsWebsiteCustomPrompt && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Custom Prompt (Optional)</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.customPromptOptional}</label>
                   <textarea
                     value={websiteCustomPrompt}
                     onChange={(event) => setWebsiteCustomPrompt(event.target.value)}
                     rows={3}
-                    placeholder="ป้อนคำสั่ง custom เพิ่มเติมเพื่อปรับแต่งการสร้างเว็บไซด์ (จะผสมกับ Description)..."
+                    placeholder={t.playground.customPromptPlaceholder}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                   />
                 </div>
@@ -636,7 +660,7 @@ export default function PlaygroundPage() {
 
               {skill.needsWebsiteImage && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Reference Image (Optional)</label>
+                  <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.referenceImageOptional}</label>
                   <div className="space-y-3">
                     <input
                       type="file"
@@ -649,7 +673,7 @@ export default function PlaygroundPage() {
                     />
                     {websiteImage && (
                       <div className="space-y-2">
-                        <label className="block text-xs text-gray-400 uppercase tracking-wider font-semibold">How to use this image:</label>
+                        <label className="block text-xs text-gray-400 uppercase tracking-wider font-semibold">{t.playground.howToUseImage}</label>
                         <div className="grid grid-cols-3 gap-2">
                           {(["design-reference", "background", "logo"] as const).map((usage) => (
                             <label key={usage} className="flex items-center gap-2 p-2 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5">
@@ -662,9 +686,9 @@ export default function PlaygroundPage() {
                                 className="w-4 h-4"
                               />
                               <span className="text-sm text-white">
-                                {usage === "design-reference" && "Design Ref"}
-                                {usage === "background" && "Background"}
-                                {usage === "logo" && "Logo"}
+                                {usage === "design-reference" && t.playground.imageUsageDesignRef}
+                                {usage === "background" && t.playground.imageUsageBackground}
+                                {usage === "logo" && t.playground.imageUsageLogo}
                               </span>
                             </label>
                           ))}
@@ -680,7 +704,7 @@ export default function PlaygroundPage() {
                 disabled={running}
                 className="w-full py-3.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {running ? "Running..." : `Run ${skill.label}`}
+                {running ? t.common.running : `${t.common.run} ${getSkillLabel(skill.id)}`}
               </button>
 
               {error && <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>}
@@ -688,7 +712,7 @@ export default function PlaygroundPage() {
               {result && (
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-semibold text-white">Result</p>
+                    <p className="text-sm font-semibold text-white">{t.common.result}</p>
                     <div className="flex gap-3">
                       {result.format === "html" && result.text && (
                         <a
@@ -696,17 +720,17 @@ export default function PlaygroundPage() {
                           download={`website-${Date.now()}.html`}
                           className="px-3 py-1 text-xs rounded-lg bg-[#D77757] text-white hover:bg-[#c46543] transition-colors"
                         >
-                          Download HTML
+                          {t.common.downloadHtml}
                         </a>
                       )}
                       <p className="text-xs text-gray-400">
-                        {result.provider || "provider"} · {result.creditsCharged ?? skill.credits} credits
+                        {result.provider || "provider"} · {result.creditsCharged ?? skill.credits} {t.common.credits}
                       </p>
                     </div>
                   </div>
                   {result.text && result.format === "html" && (
                     <div>
-                      <p className="text-xs text-gray-400 mb-3">HTML Preview (first 1000 chars):</p>
+                      <p className="text-xs text-gray-400 mb-3">{t.playground.htmlPreview}</p>
                       <pre className="whitespace-pre-wrap text-xs text-gray-300 max-h-64 overflow-y-auto bg-black/50 p-3 rounded-lg border border-white/5">
                         {result.text.slice(0, 1000)}...
                       </pre>
@@ -725,10 +749,10 @@ export default function PlaygroundPage() {
           <section className="glass-card rounded-3xl p-6 md:p-8 flex flex-col min-h-[640px]">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-xl font-outfit font-bold text-white">Gemini Chat</h2>
-                <p className="text-sm text-gray-400 mt-1">Free chat for signed-in users.</p>
+                <h2 className="text-xl font-outfit font-bold text-white">{t.playground.geminiChat}</h2>
+                <p className="text-sm text-gray-400 mt-1">{t.playground.freeChatSubtitle}</p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-wider">Free</span>
+              <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-wider">{t.common.free}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto rounded-2xl bg-black/25 border border-white/5 p-4 space-y-3 mb-4">
@@ -743,7 +767,7 @@ export default function PlaygroundPage() {
                   </div>
                 </div>
               ))}
-              {chatLoading && <p className="text-sm text-gray-500">Gemini is thinking...</p>}
+              {chatLoading && <p className="text-sm text-gray-500">{t.playground.geminiThinking}</p>}
             </div>
 
             <div className="flex gap-3">
@@ -758,14 +782,14 @@ export default function PlaygroundPage() {
                 }}
                 rows={2}
                 className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
-                placeholder="Ask Gemini..."
+                placeholder={t.playground.askGemini}
               />
               <button
                 onClick={sendChat}
                 disabled={chatLoading || !chatInput.trim()}
                 className="px-5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send
+                {t.common.send}
               </button>
             </div>
           </section>

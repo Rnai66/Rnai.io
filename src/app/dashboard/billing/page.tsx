@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { translations } from "@/lib/i18n/translations";
 
 interface BillingData {
   freeCreditsRemaining: number;
@@ -21,7 +23,10 @@ function BillingPageContent() {
   const [ready, setReady] = useState(false);
   const [billing, setBilling] = useState<BillingData | null>(null);
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
-  
+  const { language } = useLanguage();
+
+  const t = translations[language];
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const topupStatus = searchParams.get("topup");
@@ -73,7 +78,7 @@ function BillingPageContent() {
       <div className="min-h-screen flex items-center justify-center text-gray-500 text-sm bg-[#050505]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-6 h-6 border-2 border-[#D77757] border-t-transparent rounded-full animate-spin"></div>
-          Loading billing data...
+          {t.common.loading}
         </div>
       </div>
     );
@@ -93,47 +98,47 @@ function BillingPageContent() {
       <main className="max-w-4xl mx-auto px-6 w-full relative z-10 animate-fade-in">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-outfit font-bold tracking-tight text-white">Billing & Credits</h1>
-            <p className="text-sm text-gray-400 mt-1.5">Manage your API credits and top-up packs</p>
+            <h1 className="text-3xl font-outfit font-bold tracking-tight text-white">{t.billing.title}</h1>
+            <p className="text-sm text-gray-400 mt-1.5">{t.billing.subtitle}</p>
           </div>
           <button onClick={() => router.push("/dashboard")} className="text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">
-            &larr; Back to Dashboard
+            &larr; {t.common.backToDashboard}
           </button>
         </div>
 
         {topupStatus === "success" && (
           <div className="mb-8 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm flex items-center gap-3 animate-fade-in">
-            <span className="text-xl">🎉</span> Payment successful! Your credits have been added to your account.
+            <span className="text-xl">🎉</span> {t.billing.paymentSuccess}
           </div>
         )}
-        
+
         {topupStatus === "cancelled" && (
           <div className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3 animate-fade-in">
-            <span className="text-xl">❌</span> Payment cancelled. No charges were made.
+            <span className="text-xl">❌</span> {t.billing.paymentCancelled}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
           <div className="glass-card p-8 rounded-2xl">
-            <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Total Available Credits</p>
+            <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">{t.billing.totalAvailableCredits}</p>
             <p className="text-5xl font-outfit font-bold text-white mb-1">{totalCredits.toLocaleString()}</p>
-            <p className="text-sm text-green-400">Ready to use across all APIs</p>
+            <p className="text-sm text-green-400">{t.billing.readyToUse}</p>
           </div>
           <div className="glass-card p-8 rounded-2xl flex flex-col justify-center gap-4">
             <div className="flex justify-between items-center pb-4 border-b border-white/5">
-              <span className="text-sm text-gray-400">Free Quota</span>
+              <span className="text-sm text-gray-400">{t.billing.freeQuota}</span>
               <span className="text-lg font-outfit font-bold text-white">{billing?.freeCreditsRemaining.toLocaleString() || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Paid Balance</span>
+              <span className="text-sm text-gray-400">{t.billing.paidBalance}</span>
               <span className="text-lg font-outfit font-bold text-[#D77757]">{billing?.paidCreditsBalance.toLocaleString() || 0}</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3 mb-8">
-          <h2 className="text-2xl font-outfit font-bold text-white">Top-up Packs</h2>
-          <span className="px-2.5 py-0.5 rounded-full bg-[#D77757]/20 text-[#D77757] text-xs font-bold uppercase tracking-wider">No Expiry</span>
+          <h2 className="text-2xl font-outfit font-bold text-white">{t.billing.topupPacks}</h2>
+          <span className="px-2.5 py-0.5 rounded-full bg-[#D77757]/20 text-[#D77757] text-xs font-bold uppercase tracking-wider">{t.billing.noExpiry}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -141,7 +146,7 @@ function BillingPageContent() {
             <div key={pack.id} className={`glass-card p-8 rounded-3xl relative flex flex-col transition-all duration-300 hover:-translate-y-1 ${pack.popular ? 'border-[#D77757]/50 shadow-[0_0_40px_rgba(215,119,87,0.1)]' : 'border-white/5 hover:border-white/20'}`}>
               {pack.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#D77757] to-[#e89073] text-white text-[10px] font-bold uppercase tracking-wider py-1 px-4 rounded-full shadow-lg">
-                  Most Popular
+                  {t.billing.mostPopular}
                 </div>
               )}
               
@@ -152,7 +157,7 @@ function BillingPageContent() {
               
               <div className="mb-8 p-4 rounded-xl bg-black/30 border border-white/5">
                 <p className="text-[#D77757] font-bold text-lg">{pack.credits.toLocaleString()}</p>
-                <p className="text-xs text-gray-400 mt-1">AI Credits</p>
+                <p className="text-xs text-gray-400 mt-1">{t.billing.aiCredits}</p>
               </div>
               
               <div className="mt-auto">
@@ -163,7 +168,7 @@ function BillingPageContent() {
                 >
                   {loadingPack === pack.id ? (
                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : "Buy Now"}
+                  ) : t.billing.buyNow}
                 </button>
               </div>
             </div>
