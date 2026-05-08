@@ -40,6 +40,7 @@ export async function chargeCredits(uid: string, cost: number, refId: string): P
         credits: -cost,
         balanceAfter: freeCredits + paidCredits,
         ref: refId,
+        refunded: false,
         createdAt: new Date()
       });
       
@@ -48,5 +49,70 @@ export async function chargeCredits(uid: string, cost: number, refId: string): P
   } catch (error) {
     console.error("Error charging credits:", error);
     return false;
+  }
+}
+
+export async function refundCredits(uid: string, cost: number, refId: string, reason: string): Promise<void> {
+  const db = getAdminDb();
+  const userRef = db.collection("users").doc(uid);
+  const chargeQuery = db.collection("ledgerEntries")
+    .where("uid", "==", uid)
+    .where("ref", "==", refId)
+    .where("type", "==", "charge")
+    .limit(1);
+  const refundRef = db.collection("ledgerEntries").doc();
+
+  await db.runTransaction(async (transaction) => {
+    const userDoc = await transaction.get(userRef);
+    const chargeSnap = await transaction.get(chargeQuery);
+
+    if (!userDoc.exists || chargeSnap.empty) return;
+
+    const chargeDoc = chargeSnap.docs[0];
+    if (chargeDoc.data().refunded) return;
+
+    const data = userDoc.data()!;
+    const paidCredits = data.paidCreditsBalance || 0;
+    const freeCredits = data.freeCreditsRemaining || 0;
+    const newPaidBalance = paidCredits + cost;
+
+    transaction.update(userRef, {
+      paidCreditsBalance: newPaidBalance,
+    });
+
+    transaction.update(chargeDoc.ref, {
+      refunded: true,
+      refundedAt: new Date(),
+      refundReason: reason,
+    });
+
+    transaction.set(refundRef, {
+      uid,
+      type: "refund",
+      credits: cost,
+      balanceAfter: freeCredits + newPaidBalance,
+      ref: refId,
+      reason,
+      createdAt: new Date(),
+    });
+  });
+}
+
+export async function runWithCreditRefund<T>(
+  uid: string,
+  cost: number,
+  refId: string,
+  action: () => Promise<T>
+): Promise<T> {
+  try {
+    return await action();
+  } catch (error) {
+    await refundCredits(
+      uid,
+      cost,
+      refId,
+      error instanceof Error ? error.message : "Provider execution failed"
+    );
+    throw error;
   }
 }

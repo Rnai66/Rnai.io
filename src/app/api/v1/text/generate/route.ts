@@ -4,8 +4,9 @@ import { textGenerateSkill } from "@/lib/ai/skills/text-generate";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
-import { chargeCredits } from "@/lib/billing/credits";
+import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
 import { generateInputHash, getCachedResult, setCachedResult } from "@/lib/cache";
+import { requiredString, validateJson } from "@/lib/api/validation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,8 +25,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
-    const { prompt } = await req.json();
-    if (!prompt) return NextResponse.json({ error: "prompt is required" }, { status: 400 });
+    const parsed = await validateJson<{ prompt: string }>(req, {
+      prompt: requiredString({ min: 1, max: 12000 }),
+    });
+    if (parsed.response) return parsed.response;
+    const { prompt } = parsed.data;
 
     const cost = getCost("text/generate");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
@@ -48,9 +52,17 @@ export async function POST(req: NextRequest) {
     const successCharge = await chargeCredits(keyData.userId, cost, refId);
     if (!successCharge) return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
 
-    const startTime = Date.now();
-    const { result: text, provider } = await textGenerateSkill(prompt);
-    const latencyMs = Date.now() - startTime;
+    const { text, provider, latencyMs } = await runWithCreditRefund(
+      keyData.userId,
+      cost,
+      refId,
+      async () => {
+        const startTime = Date.now();
+        const { result: text, provider } = await textGenerateSkill(prompt);
+        const latencyMs = Date.now() - startTime;
+        return { text, provider, latencyMs };
+      }
+    );
 
     const result = { text };
     await setCachedResult("text/generate", inputHash, result);

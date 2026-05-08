@@ -4,8 +4,9 @@ import { audioTTSSkill } from "@/lib/ai/skills/audio-tts";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
-import { chargeCredits } from "@/lib/billing/credits";
+import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
 import { uploadToStorage } from "@/lib/storage";
+import { requiredString, validateJson } from "@/lib/api/validation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,8 +19,11 @@ export async function POST(req: NextRequest) {
     const { success } = await ratelimit.limit(keyData.id);
     if (!success) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-    const { text } = await req.json();
-    if (!text) return NextResponse.json({ error: "text is required" }, { status: 400 });
+    const parsed = await validateJson<{ text: string }>(req, {
+      text: requiredString({ min: 1, max: 5000 }),
+    });
+    if (parsed.response) return parsed.response;
+    const { text } = parsed.data;
 
     const cost = getCost("audio/tts");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
@@ -27,12 +31,18 @@ export async function POST(req: NextRequest) {
     const successCharge = await chargeCredits(keyData.userId, cost, refId);
     if (!successCharge) return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
 
-    const startTime = Date.now();
-    const { result: buf, provider } = await audioTTSSkill(text);
-    const latencyMs = Date.now() - startTime;
-
-    // Upload to storage as mp3
-    const url = await uploadToStorage(buf, refId, "mp3");
+    const { provider, latencyMs, url } = await runWithCreditRefund(
+      keyData.userId,
+      cost,
+      refId,
+      async () => {
+        const startTime = Date.now();
+        const { result: buf, provider } = await audioTTSSkill(text);
+        const latencyMs = Date.now() - startTime;
+        const url = await uploadToStorage(buf, refId, "mp3");
+        return { provider, latencyMs, url };
+      }
+    );
 
     await getAdminDb().collection("usageLogs").doc(refId).set({
       uid: keyData.userId,

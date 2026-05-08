@@ -1,6 +1,24 @@
 import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
+export async function GET(req: NextRequest) {
+  try {
+    const sessionCookie = req.cookies.get("__session")?.value;
+    if (!sessionCookie) {
+      return NextResponse.json({ authenticated: false }, { status: 401 });
+    }
+
+    const decodedSession = await getAdminAuth().verifySessionCookie(sessionCookie, true);
+    return NextResponse.json({
+      authenticated: true,
+      uid: decodedSession.uid,
+      email: decodedSession.email || null,
+    });
+  } catch {
+    return NextResponse.json({ authenticated: false }, { status: 401 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { idToken } = await req.json();

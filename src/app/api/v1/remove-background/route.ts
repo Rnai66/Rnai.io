@@ -4,8 +4,9 @@ import { removeBackgroundSkill } from "@/lib/ai/skills/image-remove-bg";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
-import { chargeCredits } from "@/lib/billing/credits";
+import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
 import { uploadToStorage } from "@/lib/storage";
+import { base64ImageRule, validateJson } from "@/lib/api/validation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,10 +35,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { image } = await req.json();
-    if (!image) {
-      return NextResponse.json({ error: "image (base64) is required" }, { status: 400 });
-    }
+    const parsed = await validateJson<{ image: string }>(req, {
+      image: base64ImageRule,
+    });
+    if (parsed.response) return parsed.response;
+    const { image } = parsed.data;
 
     const cost = getCost("image/remove-background");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
@@ -47,11 +49,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
     }
 
-    const startTime = Date.now();
-    const { result: buf, provider } = await removeBackgroundSkill(image);
-    const latencyMs = Date.now() - startTime;
-
-    const url = await uploadToStorage(buf, refId, "png");
+    const { provider, latencyMs, url } = await runWithCreditRefund(
+      keyData.userId,
+      cost,
+      refId,
+      async () => {
+        const startTime = Date.now();
+        const { result: buf, provider } = await removeBackgroundSkill(image);
+        const latencyMs = Date.now() - startTime;
+        const url = await uploadToStorage(buf, refId, "png");
+        return { provider, latencyMs, url };
+      }
+    );
 
     await getAdminDb().collection("usageLogs").doc(refId).set({
       uid: keyData.userId,

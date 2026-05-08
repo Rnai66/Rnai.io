@@ -4,7 +4,8 @@ import { textTranslateSkill } from "@/lib/ai/skills/text-translate";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
-import { chargeCredits } from "@/lib/billing/credits";
+import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
+import { requiredString, validateJson } from "@/lib/api/validation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,8 +18,12 @@ export async function POST(req: NextRequest) {
     const { success } = await ratelimit.limit(keyData.id);
     if (!success) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-    const { text: inputText, targetLanguage } = await req.json();
-    if (!inputText || !targetLanguage) return NextResponse.json({ error: "text and targetLanguage are required" }, { status: 400 });
+    const parsed = await validateJson<{ text: string; targetLanguage: string }>(req, {
+      text: requiredString({ min: 1, max: 50000 }),
+      targetLanguage: requiredString({ min: 2, max: 80 }),
+    });
+    if (parsed.response) return parsed.response;
+    const { text: inputText, targetLanguage } = parsed.data;
 
     const cost = getCost("text/translate");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
@@ -26,9 +31,17 @@ export async function POST(req: NextRequest) {
     const successCharge = await chargeCredits(keyData.userId, cost, refId);
     if (!successCharge) return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
 
-    const startTime = Date.now();
-    const { result: text, provider } = await textTranslateSkill(inputText, targetLanguage);
-    const latencyMs = Date.now() - startTime;
+    const { text, provider, latencyMs } = await runWithCreditRefund(
+      keyData.userId,
+      cost,
+      refId,
+      async () => {
+        const startTime = Date.now();
+        const { result: text, provider } = await textTranslateSkill(inputText, targetLanguage);
+        const latencyMs = Date.now() - startTime;
+        return { text, provider, latencyMs };
+      }
+    );
 
     await getAdminDb().collection("usageLogs").doc(refId).set({
       uid: keyData.userId,

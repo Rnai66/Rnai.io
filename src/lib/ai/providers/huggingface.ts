@@ -1,26 +1,74 @@
 import { Provider } from "../types";
+import { InferenceClient } from "@huggingface/inference";
 
 const HF_API = "https://api-inference.huggingface.co/models";
-const HF_TOKEN = process.env.HUGGINGFACE_API_TOKEN;
+
+function getHfToken() {
+  return process.env.HUGGINGFACE_API_TOKEN || process.env.HF_TOKEN;
+}
+
+function getHfClient() {
+  const token = getHfToken();
+  if (!token) {
+    throw new Error("Hugging Face token is not configured. Set HUGGINGFACE_API_TOKEN or HF_TOKEN in .env.local and restart the dev server.");
+  }
+  return new InferenceClient(token);
+}
 
 function headers(contentType = "application/json") {
+  const token = getHfToken();
+  if (!token) {
+    throw new Error("Hugging Face token is not configured. Set HUGGINGFACE_API_TOKEN or HF_TOKEN in .env.local and restart the dev server.");
+  }
+
   return {
-    Authorization: `Bearer ${HF_TOKEN}`,
+    Authorization: `Bearer ${token}`,
     "Content-Type": contentType,
   };
+}
+
+function authOnlyHeaders() {
+  const token = getHfToken();
+  if (!token) {
+    throw new Error("Hugging Face token is not configured. Set HUGGINGFACE_API_TOKEN or HF_TOKEN in .env.local and restart the dev server.");
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
+function normalizeHfError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  const responseBody = (error as { httpResponse?: { body?: { error?: string } } })?.httpResponse?.body?.error;
+  const detail = responseBody || message;
+
+  if (detail.includes("sufficient permissions") || detail.includes("Inference Providers")) {
+    return new Error(
+      "Hugging Face token does not have permission to call Inference Providers. Create a fine-grained token with 'Make calls to Inference Providers' permission, update HUGGINGFACE_API_TOKEN or HF_TOKEN in .env.local, then restart the dev server."
+    );
+  }
+
+  return error instanceof Error ? error : new Error(message);
 }
 
 export const HuggingFaceProvider: Provider = {
   name: "huggingface",
 
   async generateImage(prompt: string) {
-    const res = await fetch(`${HF_API}/black-forest-labs/FLUX.1-schnell`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify({ inputs: prompt }),
-    });
-    if (!res.ok) throw new Error(`HF error: ${await res.text()}`);
-    return Buffer.from(await res.arrayBuffer());
+    const hfClient = getHfClient();
+
+    let image: Blob;
+    try {
+      image = await hfClient.textToImage({
+        model: "black-forest-labs/FLUX.1-schnell",
+        inputs: prompt,
+        provider: "auto",
+      }, {
+        outputType: "blob",
+      });
+    } catch (error) {
+      throw normalizeHfError(error);
+    }
+
+    return Buffer.from(await image.arrayBuffer());
   },
   
   async removeBackground(imageBase64: string) {
@@ -43,7 +91,7 @@ export const HuggingFaceProvider: Provider = {
 
     const res = await fetch(`${HF_API}/diffusers/stable-diffusion-xl-1.0-inpainting-0.1`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${HF_TOKEN}` },
+      headers: authOnlyHeaders(),
       body: form,
     });
     if (!res.ok) throw new Error(`HF error: ${await res.text()}`);

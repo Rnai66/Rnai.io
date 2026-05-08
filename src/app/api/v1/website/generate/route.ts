@@ -7,14 +7,15 @@ import { getCost } from "@/lib/billing/pricing";
 import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
 import { uploadToStorage } from "@/lib/storage";
 import { generateInputHash, getCachedResult, setCachedResult } from "@/lib/cache";
-import { requiredString, validateJson } from "@/lib/api/validation";
+import { requiredString, optionalString, validateJson } from "@/lib/api/validation";
 
 interface WebsiteGenerateRequest {
   websiteName: string;
   websiteType: string;
   template: string;
   description: string;
-  language?: string;
+  language: string;
+  [key: string]: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
       websiteType: requiredString({ min: 1, max: 50 }),
       template: requiredString({ min: 1, max: 50 }),
       description: requiredString({ min: 1, max: 5000 }),
-      language: { type: "string", default: "th" },
+      language: optionalString({ max: 50, defaultValue: "th" }),
     });
 
     if (parsed.response) return parsed.response;
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
       refId,
       async () => {
         const startTime = Date.now();
-        const { html, prompt } = await websiteGenerateSkill({
+        const { result } = await websiteGenerateSkill({
           websiteName,
           websiteType,
           template,
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
 
         // Note: In a real scenario, you might want to store the HTML in Firebase Storage
         // For now, we'll return it directly
-        return { html, provider: "openrouter/together", latencyMs };
+        return { html: result.html, provider: "openrouter/together", latencyMs };
       }
     );
 

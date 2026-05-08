@@ -38,6 +38,9 @@ export default function Navbar() {
               <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
                 Dashboard
               </Link>
+              <Link href="/dashboard/playground" className="text-gray-300 hover:text-white transition-colors">
+                Playground
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="text-gray-400 hover:text-white transition-colors"

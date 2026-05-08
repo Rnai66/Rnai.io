@@ -4,8 +4,9 @@ import { stylizeImageSkill } from "@/lib/ai/skills/image-stylize";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
-import { chargeCredits } from "@/lib/billing/credits";
+import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
 import { uploadToStorage } from "@/lib/storage";
+import { base64ImageRule, requiredString, validateJson } from "@/lib/api/validation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,10 +35,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { image, prompt } = await req.json();
-    if (!image || !prompt) {
-      return NextResponse.json({ error: "image (base64) and prompt are required" }, { status: 400 });
-    }
+    const parsed = await validateJson<{ image: string; prompt: string }>(req, {
+      image: base64ImageRule,
+      prompt: requiredString({ min: 1, max: 2000 }),
+    });
+    if (parsed.response) return parsed.response;
+    const { image, prompt } = parsed.data;
 
     const cost = getCost("image/stylize");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
@@ -47,11 +50,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
     }
 
-    const startTime = Date.now();
-    const { result: buf, provider } = await stylizeImageSkill(image, prompt);
-    const latencyMs = Date.now() - startTime;
-
-    const url = await uploadToStorage(buf, refId, "png");
+    const { provider, latencyMs, url } = await runWithCreditRefund(
+      keyData.userId,
+      cost,
+      refId,
+      async () => {
+        const startTime = Date.now();
+        const { result: buf, provider } = await stylizeImageSkill(image, prompt);
+        const latencyMs = Date.now() - startTime;
+        const url = await uploadToStorage(buf, refId, "png");
+        return { provider, latencyMs, url };
+      }
+    );
 
     await getAdminDb().collection("usageLogs").doc(refId).set({
       uid: keyData.userId,

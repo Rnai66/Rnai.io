@@ -1,4 +1,4 @@
-export type SkillName = 
+export type SkillName =
   | "image/generate"
   | "image/edit"
   | "image/remove-background"
@@ -10,7 +10,8 @@ export type SkillName =
   | "text/rewrite"
   | "text/extract"
   | "audio/tts"
-  | "audio/stt";
+  | "audio/stt"
+  | "website/generate";
 
 export const PRICING: Record<SkillName, number> = {
   "image/generate": 5,
@@ -25,6 +26,7 @@ export const PRICING: Record<SkillName, number> = {
   "text/extract": 1,
   "audio/tts": 10,
   "audio/stt": 5,
+  "website/generate": 10,
 };
 
 export function getCost(skill: SkillName): number {

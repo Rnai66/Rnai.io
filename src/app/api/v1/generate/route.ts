@@ -4,9 +4,10 @@ import { generateImageSkill } from "@/lib/ai/skills/image-generate";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getCost } from "@/lib/billing/pricing";
-import { chargeCredits } from "@/lib/billing/credits";
+import { chargeCredits, runWithCreditRefund } from "@/lib/billing/credits";
 import { uploadToStorage } from "@/lib/storage";
 import { generateInputHash, getCachedResult, setCachedResult } from "@/lib/cache";
+import { requiredString, validateJson } from "@/lib/api/validation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,10 +36,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { prompt } = await req.json();
-    if (!prompt) {
-      return NextResponse.json({ error: "prompt is required" }, { status: 400 });
-    }
+    const parsed = await validateJson<{ prompt: string }>(req, {
+      prompt: requiredString({ min: 1, max: 2000 }),
+    });
+    if (parsed.response) return parsed.response;
+    const { prompt } = parsed.data;
 
     const cost = getCost("image/generate");
     const refId = `req_${Date.now()}_${Math.floor(Math.random()*1000)}`;
@@ -64,11 +66,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
     }
 
-    const startTime = Date.now();
-    const { result: buf, provider } = await generateImageSkill(prompt);
-    const latencyMs = Date.now() - startTime;
-
-    const url = await uploadToStorage(buf, refId, "png");
+    const { provider, latencyMs, url } = await runWithCreditRefund(
+      keyData.userId,
+      cost,
+      refId,
+      async () => {
+        const startTime = Date.now();
+        const { result: buf, provider } = await generateImageSkill(prompt);
+        const latencyMs = Date.now() - startTime;
+        const url = await uploadToStorage(buf, refId, "png");
+        return { buf, provider, latencyMs, url };
+      }
+    );
     const result = { url, format: "png" };
 
     // Set Cache
@@ -89,9 +98,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("API /v1/generate error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    const status = message.includes("does not have permission")
+      ? 403
+      : message.includes("token is not configured")
+        ? 503
+        : 500;
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }
