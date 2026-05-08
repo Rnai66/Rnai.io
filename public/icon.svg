@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <style>
+      .primary-color { fill: #D77757; }
+      .secondary-color { fill: #5769F7; }
+    </style>
+  </defs>
+
+  <!-- Outer circle ring -->
+  <circle cx="128" cy="128" r="116" fill="none" stroke="#D77757" stroke-width="4"/>
+
+  <!-- Inner background gradient effect -->
+  <circle cx="128" cy="128" r="96" fill="#D77757" opacity="0.08"/>
+
+  <!-- Center node (main hub) -->
+  <circle cx="128" cy="128" r="16" class="primary-color"/>
+
+  <!-- Surrounding nodes - forming cross pattern -->
+  <circle cx="128" cy="50" r="10" class="secondary-color" opacity="0.8"/>
+  <circle cx="128" cy="206" r="10" class="secondary-color" opacity="0.8"/>
+  <circle cx="50" cy="128" r="10" class="secondary-color" opacity="0.8"/>
+  <circle cx="206" cy="128" r="10" class="secondary-color" opacity="0.8"/>
+
+  <!-- Diagonal nodes -->
+  <circle cx="164" cy="76" r="10" class="secondary-color" opacity="0.6"/>
+  <circle cx="164" cy="180" r="10" class="secondary-color" opacity="0.6"/>
+  <circle cx="92" cy="76" r="10" class="secondary-color" opacity="0.6"/>
+  <circle cx="92" cy="180" r="10" class="secondary-color" opacity="0.6"/>
+
+  <!-- Connection lines from center to adjacent nodes -->
+  <line x1="128" y1="50" x2="128" y2="104" stroke="#D77757" stroke-width="3" opacity="0.6"/>
+  <line x1="128" y1="152" x2="128" y2="206" stroke="#D77757" stroke-width="3" opacity="0.6"/>
+  <line x1="50" y1="128" x2="104" y2="128" stroke="#D77757" stroke-width="3" opacity="0.6"/>
+  <line x1="152" y1="128" x2="206" y2="128" stroke="#D77757" stroke-width="3" opacity="0.6"/>
+
+  <!-- Diagonal connection lines -->
+  <line x1="92" y1="76" x2="104" y2="104" stroke="#D77757" stroke-width="3" opacity="0.5"/>
+  <line x1="152" y1="152" x2="164" y2="180" stroke="#D77757" stroke-width="3" opacity="0.5"/>
+</svg>

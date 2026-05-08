@@ -10,7 +10,14 @@ export const metadata: Metadata = {
   title: "Rnai.io — The Ultimate AI Gateway",
   description: "Generate, edit, translate, and extract using the world's best AI models with one simple API.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/icon.svg",
+    apple: "/apple-icon.png",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Rnai.io",
   },
 };
 
