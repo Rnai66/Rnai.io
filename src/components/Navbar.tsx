@@ -4,6 +4,7 @@ import { auth } from "@/lib/firebase/client";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function Navbar() {
           </div>
           Rnai<span className="text-[#D77757]">.io</span>
         </Link>
-        <div className="flex items-center gap-6 text-sm font-medium">
+        <div className="flex items-center gap-4 text-sm font-medium">
           {email ? (
             <>
               <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
@@ -41,12 +42,17 @@ export default function Navbar() {
               <Link href="/dashboard/playground" className="text-gray-300 hover:text-white transition-colors">
                 Playground
               </Link>
+              <Link href="/dashboard/profile" className="text-gray-300 hover:text-white transition-colors">
+                Profile
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 Sign out
               </button>
+              <div className="h-6 w-px bg-white/10"></div>
+              <LanguageSwitcher />
             </>
           ) : (
             <>
@@ -59,6 +65,8 @@ export default function Navbar() {
               >
                 Get Started
               </Link>
+              <div className="h-6 w-px bg-white/10"></div>
+              <LanguageSwitcher />
             </>
           )}
         </div>
