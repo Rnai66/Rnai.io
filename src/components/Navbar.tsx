@@ -1,9 +1,8 @@
 "use client";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { translations } from "@/lib/i18n/translations";
@@ -11,7 +10,6 @@ import { translations } from "@/lib/i18n/translations";
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const router = useRouter();
   const { language } = useLanguage();
 
   useEffect(() => {
@@ -21,13 +19,6 @@ export default function Navbar() {
     setMounted(true);
     return unsub;
   }, []);
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-    await fetch("/api/auth/session", { method: "DELETE" });
-    router.push("/");
-    router.refresh();
-  };
 
   if (!mounted) return null;
 
@@ -54,12 +45,6 @@ export default function Navbar() {
               <Link href="/dashboard/profile" className="text-gray-300 hover:text-white transition-colors">
                 {t.nav.profile}
               </Link>
-              <button
-                onClick={handleSignOut}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                {t.nav.signOut}
-              </button>
               <div className="h-6 w-px bg-white/10"></div>
               <LanguageSwitcher />
             </>

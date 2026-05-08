@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { t } from "@/lib/i18n/translations";
+import { translations } from "@/lib/i18n/translations";
 
 type TabId = "language" | "account" | "apiKeys" | "billing";
 
@@ -63,6 +64,13 @@ export default function ProfilePage() {
     } catch (e) {
       console.error("Failed to save profile:", e);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    await fetch("/api/auth/session", { method: "DELETE" });
+    router.push("/");
+    router.refresh();
   };
 
   if (!ready) {
@@ -218,6 +226,26 @@ export default function ProfilePage() {
               >
                 {language === "en" ? "Save Changes" : "บันทึกการเปลี่ยนแปลง"}
               </button>
+
+              {/* Sign Out Section */}
+              <div className="pt-6 border-t border-white/10">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-white mb-2">
+                    {language === "en" ? "Sign Out" : "ออกจากระบบ"}
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    {language === "en"
+                      ? "You will be logged out of all sessions"
+                      : "คุณจะออกจากระบบในทุกเซสชั่น"}
+                  </p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full py-3 rounded-xl bg-red-500/20 text-red-400 font-semibold text-sm hover:bg-red-500/30 transition-all border border-red-500/30"
+                >
+                  {language === "en" ? "Sign Out" : "ออกจากระบบ"}
+                </button>
+              </div>
             </div>
           )}
 
