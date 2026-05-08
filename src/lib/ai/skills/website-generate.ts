@@ -11,6 +11,13 @@ interface WebsiteGenerationParams {
 export async function websiteGenerateSkill(params: WebsiteGenerationParams) {
   const { websiteName, websiteType, template, description, language = "th" } = params;
 
+  // Validate API keys are configured
+  if (!process.env.OPENROUTER_API_KEY && !process.env.TOGETHER_API_KEY) {
+    throw new Error(
+      "Website generation service is not configured. Please set OPENROUTER_API_KEY or TOGETHER_API_KEY environment variables."
+    );
+  }
+
   // Build detailed prompt for AI to generate complete HTML website
   const prompt = `
 You are a professional web developer. Generate a complete, beautiful, and functional HTML5 website with embedded CSS and JavaScript based on the following requirements:
@@ -46,18 +53,31 @@ Begin generating the website now:`;
   // Use OpenRouter/Together for text generation with higher context limits
   const providers = ["openrouter", "together"];
 
-  return executeWithFallback(providers, async (provider) => {
-    if (!provider.generateText) throw new Error(`${provider.name} does not support generateText`);
+  try {
+    const { result, provider: usedProvider } = await executeWithFallback(providers, async (provider) => {
+      if (!provider.generateText) {
+        throw new Error(`${provider.name} does not support generateText`);
+      }
 
-    const result = await provider.generateText(prompt);
+      const result = await provider.generateText(prompt);
 
-    // Extract HTML from the response (in case it includes extra text)
-    const htmlMatch = result.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
-    const htmlCode = htmlMatch ? htmlMatch[0] : result;
+      // Extract HTML from the response (in case it includes extra text)
+      const htmlMatch = result.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
+      const htmlCode = htmlMatch ? htmlMatch[0] : result;
+
+      return {
+        html: htmlCode,
+        prompt: prompt
+      };
+    });
 
     return {
-      html: htmlCode,
-      prompt: prompt
+      result,
+      provider: usedProvider
     };
-  });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`Website generation failed: ${errorMessage}`);
+    throw new Error(`Failed to generate website: ${errorMessage}`);
+  }
 }
