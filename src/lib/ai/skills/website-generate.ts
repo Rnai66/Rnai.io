@@ -47,7 +47,7 @@ Begin generating the website now:`;
   const providers = ["openrouter", "together"];
 
   return executeWithFallback(providers, async (provider) => {
-    if (!provider.generateText) throw new Error(\`\${provider.name} does not support generateText\`);
+    if (!provider.generateText) throw new Error(`${provider.name} does not support generateText`);
 
     const result = await provider.generateText(prompt);
 
