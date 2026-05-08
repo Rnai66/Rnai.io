@@ -313,7 +313,7 @@ export const translations = {
     // Navigation
     nav: {
       dashboard: "แดชบอร์ด",
-      playground: "พื้นที่ทดลอง",
+      playground: "พื้นที่จำลอง",
       profile: "โปรไฟล์",
       logout: "ออกจากระบบ",
       signOut: "ออกจากระบบ",
@@ -404,7 +404,7 @@ export const translations = {
 
     // Playground
     playground: {
-      title: "พื้นที่ทดลอง AI",
+      title: "พื้นที่จำลอง AI",
       subtitle: "ใช้ทักษะ Rnai จากบัญชีของคุณ และแชทกับ Gemini ได้ฟรี",
       selectFunction: "เลือกฟังชั่น",
 

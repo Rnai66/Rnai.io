@@ -1,4 +1,5 @@
 import { getAdminStorage } from "@/lib/firebase/admin";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 const CONTENT_TYPES: Record<string, string> = {
   png: "image/png",
@@ -36,7 +37,29 @@ function toDataUrl(buffer: Buffer, extension: StorageExtension) {
   return `data:${CONTENT_TYPES[extension]};base64,${buffer.toString("base64")}`;
 }
 
-export async function uploadToStorage(buffer: Buffer, refId: string, extension: StorageExtension = "png"): Promise<string> {
+/**
+ * Upload to Cloudinary (primary method)
+ * Uses Cloudinary API for reliable cloud storage
+ */
+async function uploadToCloudinaryStorage(buffer: Buffer, refId: string, extension: StorageExtension = "png"): Promise<string> {
+  try {
+    const response = await uploadToCloudinary(
+      buffer,
+      `${refId}.${extension}`,
+      "rnai-io/generations"
+    );
+    return response.secure_url;
+  } catch (error) {
+    console.error("Cloudinary upload failed:", error);
+    throw error;
+  }
+}
+
+/**
+ * Upload to Firebase Storage (fallback method)
+ * Kept for backward compatibility
+ */
+async function uploadToFirebaseStorage(buffer: Buffer, refId: string, extension: StorageExtension = "png"): Promise<string> {
   const filename = `generations/${refId}.${extension}`;
   const candidates = getBucketCandidates();
   let lastError: unknown;
@@ -65,12 +88,44 @@ export async function uploadToStorage(buffer: Buffer, refId: string, extension: 
     }
   }
 
-  const message = `Firebase Storage bucket does not exist. Set FIREBASE_STORAGE_BUCKET in .env.local to the exact bucket name from Firebase Console. Tried: ${candidates.join(", ")}. ${lastError instanceof Error ? lastError.message : ""}`;
+  throw new Error(
+    `Firebase Storage bucket does not exist. Set FIREBASE_STORAGE_BUCKET in .env.local to the exact bucket name from Firebase Console. Tried: ${candidates.join(", ")}. ${lastError instanceof Error ? lastError.message : ""}`
+  );
+}
 
-  if (shouldReturnDataUrlFallback()) {
-    console.warn(`${message} Returning a data URL fallback for local development.`);
-    return toDataUrl(buffer, extension);
+/**
+ * Upload file to storage using Cloudinary (primary) with Firebase fallback
+ * @param buffer - The image buffer to upload
+ * @param refId - Reference ID for the file
+ * @param extension - File extension (png, jpg, etc.)
+ * @returns URL of the uploaded file
+ */
+export async function uploadToStorage(buffer: Buffer, refId: string, extension: StorageExtension = "png"): Promise<string> {
+  // Try Cloudinary first if configured
+  if (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+    try {
+      return await uploadToCloudinaryStorage(buffer, refId, extension);
+    } catch (error) {
+      console.error("Cloudinary upload failed:", error);
+      // Fall back to data URL if in development, otherwise propagate Cloudinary error
+      if (shouldReturnDataUrlFallback()) {
+        console.warn("Returning data URL fallback for local development.");
+        return toDataUrl(buffer, extension);
+      }
+      throw error;
+    }
   }
 
-  throw new Error(message);
+  // Try Firebase Storage as fallback only if Cloudinary is not configured
+  try {
+    return await uploadToFirebaseStorage(buffer, refId, extension);
+  } catch (error) {
+    console.warn("Firebase Storage upload failed:", error);
+    // Fall back to data URL if in development
+    if (shouldReturnDataUrlFallback()) {
+      console.warn("Returning data URL fallback for local development.");
+      return toDataUrl(buffer, extension);
+    }
+    throw error;
+  }
 }
