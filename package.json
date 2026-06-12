@@ -12,6 +12,7 @@
     "@stripe/stripe-js": "^9.4.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
+    "expo": "^55.0.24",
     "firebase": "^11.10.0",
     "firebase-admin": "^13.2.0",
     "next": "^16.2.4",

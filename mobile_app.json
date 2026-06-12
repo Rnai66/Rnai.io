@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Rnai.io Mobile",
+    "slug": "rnai-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "io.rnai.mobile"
+    },
+    "android": {
+      "package": "io.rnai.mobile"
+    },
+    "plugins": []
+  }
+}
