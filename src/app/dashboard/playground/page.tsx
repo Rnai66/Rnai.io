@@ -7,7 +7,7 @@ import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { translations } from "@/lib/i18n/translations";
-import { SKILL_TEMPLATES, SKILL_TEMPLATE_FILL, TARGET_LANGUAGES } from "@/lib/playground/templates";
+import { SKILL_TEMPLATES, SKILL_TEMPLATE_FILL, TARGET_LANGUAGES, localizeTemplate } from "@/lib/playground/templates";
 
 type SkillId =
   | "image/generate"
@@ -242,8 +242,8 @@ export default function PlaygroundPage() {
 
   const skill = useMemo(() => SKILLS.find((item) => item.id === skillId) || SKILLS[0], [skillId]);
 
-  // Templates for the current skill (shared with the mobile app)
-  const skillTemplates = SKILL_TEMPLATES[skillId] ?? [];
+  // Templates for the current skill (shared with the mobile app, localized)
+  const skillTemplates = (SKILL_TEMPLATES[skillId] ?? []).map((tmpl) => localizeTemplate(tmpl, language));
   const templateFill = SKILL_TEMPLATE_FILL[skillId];
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
 
