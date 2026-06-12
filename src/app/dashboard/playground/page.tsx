@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { translations } from "@/lib/i18n/translations";
+import { SKILL_TEMPLATES, SKILL_TEMPLATE_FILL, TARGET_LANGUAGES } from "@/lib/playground/templates";
 
 type SkillId =
   | "image/generate"
@@ -43,6 +44,30 @@ type SkillConfig = {
   needsWebsiteCustomPrompt?: boolean;
   needsWebsiteImage?: boolean;
 };
+
+// Emoji icons — same visual language as the Rnai.io mobile app
+const SKILL_ICONS: Record<SkillId, string> = {
+  "image/generate": "🎨",
+  "image/remove-background": "✂️",
+  "image/upscale": "🔍",
+  "image/stylize": "🖌️",
+  "image/edit": "✏️",
+  "text/generate": "📝",
+  "text/summarize": "📋",
+  "text/translate": "🌐",
+  "text/rewrite": "♻️",
+  "text/extract": "🔎",
+  "audio/tts": "🔊",
+  "audio/stt": "🎙️",
+  "website/generate": "💻",
+};
+
+const CATEGORY_META: { id: SkillConfig["category"]; icon: string }[] = [
+  { id: "Image", icon: "🖼️" },
+  { id: "Text", icon: "📝" },
+  { id: "Audio", icon: "🔊" },
+  { id: "Website", icon: "💻" },
+];
 
 const SKILLS: SkillConfig[] = [
   { id: "image/generate", label: "Image Generate", category: "Image", credits: 5, needsPrompt: true },
@@ -209,12 +234,34 @@ export default function PlaygroundPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: "assistant", text: "Ask me anything. Gemini chat is free for signed-in users." },
   ]);
+  const [activeCategory, setActiveCategory] = useState<SkillConfig["category"]>("Image");
   const router = useRouter();
   const { language } = useLanguage();
 
   const t = translations[language];
 
   const skill = useMemo(() => SKILLS.find((item) => item.id === skillId) || SKILLS[0], [skillId]);
+
+  // Templates for the current skill (shared with the mobile app)
+  const skillTemplates = SKILL_TEMPLATES[skillId] ?? [];
+  const templateFill = SKILL_TEMPLATE_FILL[skillId];
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+
+  const applyTemplate = (templateId: string, templatePrompt: string) => {
+    setActiveTemplateId(templateId);
+    setResult(null);
+    setError("");
+    if (templateFill === "text") setText(templatePrompt);
+    else if (templateFill === "description") setDescription(templatePrompt);
+    else setPrompt(templatePrompt);
+  };
+
+  const selectSkill = (id: SkillId) => {
+    setSkillId(id);
+    setActiveTemplateId(null);
+    setResult(null);
+    setError("");
+  };
 
   const getSkillLabel = (id: SkillId) => {
     const skillLabelMap: Record<SkillId, string> = {
@@ -368,36 +415,104 @@ export default function PlaygroundPage() {
             <div className="grid gap-5">
               <div>
                 <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.function}</label>
-                <select
-                  value={skillId}
-                  onChange={(event) => {
-                    setSkillId(event.target.value as SkillId);
-                    setResult(null);
-                    setError("");
-                  }}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
-                >
-                  {["Image", "Text", "Audio", "Website"].map((category) => (
-                    <optgroup key={category} label={category}>
-                      {SKILLS.filter((item) => item.category === category).map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {getSkillLabel(item.id)} - {item.credits} {t.common.credits}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+
+                {/* Category tabs */}
+                <div className="flex gap-1.5 p-1 mb-3 rounded-xl bg-black/40 border border-white/10">
+                  {CATEGORY_META.map((category) => {
+                    const isActive = activeCategory === category.id;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveCategory(category.id);
+                          const first = SKILLS.find((item) => item.category === category.id);
+                          if (first) selectSkill(first.id);
+                        }}
+                        className={`flex-1 rounded-lg px-2 py-2 text-xs sm:text-sm font-semibold transition-all ${
+                          isActive
+                            ? "bg-[#D77757] text-white shadow-[0_0_20px_rgba(215,119,87,0.35)]"
+                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <span className="mr-1.5">{category.icon}</span>
+                        {category.id}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Skill cards in the active category */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {SKILLS.filter((item) => item.category === activeCategory).map((item) => {
+                    const isActive = skillId === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => selectSkill(item.id)}
+                        className={`rounded-xl border p-3 text-left transition-all ${
+                          isActive
+                            ? "border-[#D77757] bg-[#D77757]/10 shadow-[0_0_18px_rgba(215,119,87,0.2)]"
+                            : "border-white/10 bg-black/30 hover:border-white/25 hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <div className="text-xl mb-1.5">{SKILL_ICONS[item.id]}</div>
+                        <p className={`text-xs sm:text-sm font-semibold leading-tight ${isActive ? "text-[#D77757]" : "text-white"}`}>
+                          {getSkillLabel(item.id)}
+                        </p>
+                        <p className="text-[11px] text-gray-500 mt-1">{item.credits} {t.common.credits}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* ── Popular templates (same set as the mobile app) ── */}
+              {skillTemplates.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs text-gray-400 uppercase tracking-wider font-semibold">{t.playground.popularTemplates}</label>
+                    <p className="text-xs text-gray-500">{t.playground.clickToFill}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {skillTemplates.map((tmpl) => {
+                      const isActive = activeTemplateId === tmpl.id;
+                      return (
+                        <button
+                          key={tmpl.id}
+                          type="button"
+                          title={tmpl.caption}
+                          onClick={() => applyTemplate(tmpl.id, tmpl.prompt)}
+                          className={`rounded-full border px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+                            isActive
+                              ? "border-[#D77757] bg-[#D77757] text-white"
+                              : "border-white/10 bg-black/30 text-gray-300 hover:border-[#D77757]/50 hover:text-white"
+                          }`}
+                        >
+                          {tmpl.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {activeTemplateId && (
+                    <p className="mt-2 text-xs text-gray-500">
+                      💡 {skillTemplates.find((tmpl) => tmpl.id === activeTemplateId)?.caption}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {skill.needsPrompt && (
                 <div>
                   <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.prompt}</label>
+                  {skillId === "image/generate" && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-white">{t.playground.popularTemplates}</p>
+                      <p className="text-sm font-medium text-white">🎬 Cinematic Posters</p>
                       <p className="text-xs text-gray-500">{t.playground.clickToFill}</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
                       {PROMPT_TEMPLATES.map((template) => (
                         <button
                           key={template.title}
@@ -422,6 +537,7 @@ export default function PlaygroundPage() {
                       ))}
                     </div>
                   </div>
+                  )}
                   <textarea
                     value={prompt}
                     onChange={(event) => setPrompt(event.target.value)}
@@ -501,11 +617,31 @@ export default function PlaygroundPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {skill.needsTargetLanguage && (
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">{t.common.targetLanguage}</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {TARGET_LANGUAGES.map((lang) => {
+                        const isActive = targetLanguage === lang.value;
+                        return (
+                          <button
+                            key={lang.value}
+                            type="button"
+                            onClick={() => setTargetLanguage(lang.value)}
+                            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                              isActive
+                                ? "border-[#D77757] bg-[#D77757] text-white"
+                                : "border-white/10 bg-black/30 text-gray-300 hover:border-[#D77757]/50 hover:text-white"
+                            }`}
+                          >
+                            {lang.flag} {lang.value}
+                          </button>
+                        );
+                      })}
+                    </div>
                     <input
                       value={targetLanguage}
                       onChange={(event) => setTargetLanguage(event.target.value)}
+                      placeholder="Or type any language..."
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D77757]/50 text-sm"
                     />
                   </div>
@@ -702,9 +838,19 @@ export default function PlaygroundPage() {
               <button
                 onClick={handleRun}
                 disabled={running}
-                className="w-full py-3.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#D77757] to-[#c4552f] text-white font-semibold text-sm hover:from-[#e08868] hover:to-[#d4663f] transition-all shadow-[0_4px_24px_rgba(215,119,87,0.35)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {running ? t.common.running : `${t.common.run} ${getSkillLabel(skill.id)}`}
+                {running ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    {t.common.running}
+                  </>
+                ) : (
+                  <>
+                    {SKILL_ICONS[skill.id]} {t.common.run} {getSkillLabel(skill.id)}
+                    <span className="text-white/70 text-xs font-normal">· {skill.credits} {t.common.credits}</span>
+                  </>
+                )}
               </button>
 
               {error && <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>}
