@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/firebase/verifyToken";
 import { getAdminDb } from "@/lib/firebase/admin";
-import { getProduct, type Platform } from "@/lib/products";
+import { getProduct, hasAccess, type Platform, type Tier } from "@/lib/products";
 
 // Gated download endpoint.
 //   GET /api/downloads/[id]?platform=android
-// - Requires the user to be signed in (tier "free" = any member).
-// - For "pro"/"enterprise" products, also checks the user has paid credits.
+// - Requires the user to be signed in.
+// - Membership-tier gate: the user's tier must be >= the product's required tier
+//   (Starter < Pro < Enterprise). Tier is set on the user doc when they buy a pack.
 // - Redirects (302) to the real installer URL configured in src/lib/products.ts.
 
 export async function GET(
@@ -29,16 +30,14 @@ export async function GET(
       return NextResponse.redirect(loginUrl);
     }
 
-    // Tier gate (default "free" = any signed-in member; tighten per-product later).
+    // Membership-tier gate.
     if (product.tier !== "free") {
       const userDoc = await getAdminDb().collection("users").doc(uid).get();
       const data = userDoc.data() || {};
-      const entitled =
-        (data.paidCreditsBalance || 0) > 0 ||
-        data.plan === product.tier ||
-        data.plan === "enterprise";
-      if (!entitled) {
-        const upgradeUrl = new URL("/pricing", req.url);
+      const userTier = (data.tier as Tier) || "free";
+      if (!hasAccess(userTier, product.tier)) {
+        const upgradeUrl = new URL("/dashboard/billing", req.url);
+        upgradeUrl.searchParams.set("upgrade", product.tier);
         upgradeUrl.searchParams.set("product", id);
         return NextResponse.redirect(upgradeUrl);
       }

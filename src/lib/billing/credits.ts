@@ -1,5 +1,6 @@
 import { getAdminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { TIER_RANK, type Tier } from "@/lib/products";
 
 /**
  * Add paid credits to a user, idempotently keyed on `ref` (e.g. a voucher id
@@ -11,7 +12,8 @@ export async function addPaidCredits(
   uid: string,
   credits: number,
   ref: string,
-  meta: Record<string, unknown> = {}
+  meta: Record<string, unknown> = {},
+  grantTier?: Tier
 ): Promise<{ added: boolean; alreadyProcessed: boolean; balanceAfter: number }> {
   const db = getAdminDb();
   const userRef = db.collection("users").doc(uid);
@@ -38,10 +40,18 @@ export async function addPaidCredits(
     }
 
     const newPaid = paid + credits;
-    transaction.update(userRef, {
+    const updates: Record<string, unknown> = {
       paidCreditsBalance: FieldValue.increment(credits),
       lastTopupAt: new Date(),
-    });
+    };
+    // Grant/upgrade membership tier (keep the highest ever held).
+    if (grantTier) {
+      const currentTier = (data.tier as Tier) || "free";
+      if ((TIER_RANK[grantTier] ?? 0) > (TIER_RANK[currentTier] ?? 0)) {
+        updates.tier = grantTier;
+      }
+    }
+    transaction.update(userRef, updates);
 
     const ledgerRef = db.collection("ledgerEntries").doc();
     transaction.set(ledgerRef, {

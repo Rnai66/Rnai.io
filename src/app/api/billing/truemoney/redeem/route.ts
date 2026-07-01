@@ -3,6 +3,7 @@ import { verifyToken } from "@/lib/firebase/verifyToken";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { addPaidCredits } from "@/lib/billing/credits";
+import { tierForBaht } from "@/lib/products";
 import {
   redeemVoucher,
   extractVoucherHash,
@@ -68,11 +69,13 @@ export async function POST(req: NextRequest) {
     const credits = Math.round(amountBaht * CREDITS_PER_BAHT);
     const ref = `tmn_${voucherId}`;
 
-    const result = await addPaidCredits(uid, credits, ref, {
-      source: "truemoney",
-      amountBaht,
-      voucherId,
-    });
+    const result = await addPaidCredits(
+      uid,
+      credits,
+      ref,
+      { source: "truemoney", amountBaht, voucherId },
+      tierForBaht(amountBaht)
+    );
 
     if (!result.added && result.alreadyProcessed) {
       return NextResponse.json({ error: "Already redeemed", message: "บัตรนี้ถูกใช้ไปแล้ว" }, { status: 400 });

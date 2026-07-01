@@ -3,6 +3,7 @@ import { validateApiKey } from "@/lib/firebase/validateKey";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { addPaidCredits } from "@/lib/billing/credits";
+import { tierForBaht } from "@/lib/products";
 import { requiredString, validateJson } from "@/lib/api/validation";
 import {
   redeemVoucher,
@@ -77,11 +78,13 @@ export async function POST(req: NextRequest) {
     const credits = Math.round(amountBaht * CREDITS_PER_BAHT);
     const ref = `tmn_${voucherId}`;
 
-    const result = await addPaidCredits(keyData.userId, credits, ref, {
-      source: "truemoney",
-      amountBaht,
-      voucherId,
-    });
+    const result = await addPaidCredits(
+      keyData.userId,
+      credits,
+      ref,
+      { source: "truemoney", amountBaht, voucherId },
+      tierForBaht(amountBaht)
+    );
 
     if (!result.added && result.alreadyProcessed) {
       return NextResponse.json(

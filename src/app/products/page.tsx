@@ -5,7 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { PRODUCTS, type Platform } from "@/lib/products";
+import { PRODUCTS, hasAccess, type Platform, type Tier } from "@/lib/products";
 
 const PLATFORM_LABEL: Record<Platform, string> = {
   ios: "iOS",
@@ -15,15 +15,34 @@ const PLATFORM_LABEL: Record<Platform, string> = {
   mac: "macOS",
 };
 
+const TIER_LABEL: Record<Tier, string> = {
+  free: "Free",
+  starter: "Starter",
+  pro: "Pro",
+  enterprise: "Enterprise",
+};
+
 export default function ProductsPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [ready, setReady] = useState(false);
+  const [tier, setTier] = useState<Tier>("free");
   const { language } = useLanguage();
   const th = language === "th";
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
       setSignedIn(!!user);
+      if (user) {
+        try {
+          const res = await fetch("/api/billing/me");
+          if (res.ok) {
+            const data = await res.json();
+            setTier((data.tier as Tier) || "free");
+          }
+        } catch {
+          /* ignore */
+        }
+      }
       setReady(true);
     });
     return unsub;
@@ -43,9 +62,23 @@ export default function ProductsPage() {
           </h1>
           <p className="mt-4 text-gray-400 max-w-xl mx-auto">
             {th
-              ? "แอปและซอฟต์แวร์ทั้งหมดจาก Rnai.io — ฟรีสำหรับสมาชิก เพียงเข้าสู่ระบบก็ดาวน์โหลดได้"
-              : "Every app and tool from Rnai.io — free for members. Just sign in to download."}
+              ? "ปลดล็อกดาวน์โหลดตามระดับสมาชิก — Starter · Pro · Enterprise"
+              : "Downloads unlock by membership tier — Starter · Pro · Enterprise."}
           </p>
+          {ready && signedIn && (
+            <p className="mt-3 text-sm text-gray-300">
+              {th ? "ระดับของคุณ: " : "Your tier: "}
+              <span className="font-semibold text-[#D77757]">{TIER_LABEL[tier]}</span>
+              {tier === "free" && (
+                <>
+                  {" · "}
+                  <Link href="/dashboard/billing" className="underline hover:text-white">
+                    {th ? "สมัครสมาชิก" : "Become a member"}
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
         </div>
 
         {/* Grid */}
@@ -55,6 +88,7 @@ export default function ProductsPage() {
               (k) => p.downloads[k as Platform]
             ) as Platform[];
             const hasDownloads = platforms.length > 0;
+            const unlocked = hasAccess(tier, p.tier);
             return (
               <div
                 key={p.id}
@@ -67,7 +101,7 @@ export default function ProductsPage() {
                   >
                     {p.icon}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="font-outfit text-xl font-bold">{p.name}</h2>
                       <span className="text-[11px] font-medium text-gray-400 bg-white/[0.06] border border-white/10 rounded-full px-2 py-0.5">
@@ -78,6 +112,17 @@ export default function ProductsPage() {
                       {th ? p.taglineTh : p.tagline}
                     </p>
                   </div>
+                  {/* Required-tier badge */}
+                  <span
+                    className={`shrink-0 text-[10px] font-bold uppercase tracking-wider rounded-full px-2.5 py-1 border ${
+                      unlocked
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-white/[0.05] text-gray-400 border-white/10"
+                    }`}
+                  >
+                    {unlocked ? "✓ " : "🔒 "}
+                    {TIER_LABEL[p.tier]}
+                  </span>
                 </div>
 
                 {/* Platform chips */}
@@ -101,9 +146,13 @@ export default function ProductsPage() {
                       href="/auth/login?next=/products"
                       className="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-gray-200 transition-colors"
                     >
-                      {th ? "เข้าสู่ระบบเพื่อดาวน์โหลด" : "Sign in to download"}
+                      {th ? "เข้าสู่ระบบ" : "Sign in"}
                     </Link>
-                  ) : hasDownloads ? (
+                  ) : !hasDownloads ? (
+                    <span className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 bg-white/[0.04] border border-white/10 cursor-not-allowed">
+                      {th ? "เร็วๆ นี้" : "Coming soon"}
+                    </span>
+                  ) : unlocked ? (
                     platforms.map((pl) => (
                       <a
                         key={pl}
@@ -115,9 +164,12 @@ export default function ProductsPage() {
                       </a>
                     ))
                   ) : (
-                    <span className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 bg-white/[0.04] border border-white/10 cursor-not-allowed">
-                      {th ? "เร็วๆ นี้" : "Coming soon"}
-                    </span>
+                    <Link
+                      href={`/dashboard/billing?upgrade=${p.tier}&product=${p.id}`}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold bg-white/10 text-white border border-white/15 hover:bg-white/20 transition-colors"
+                    >
+                      🔒 {th ? `สมัคร ${TIER_LABEL[p.tier]} เพื่อปลดล็อก` : `Upgrade to ${TIER_LABEL[p.tier]} to unlock`}
+                    </Link>
                   )}
                 </div>
               </div>

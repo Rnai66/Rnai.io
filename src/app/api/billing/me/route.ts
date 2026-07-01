@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
       freeCreditsRemaining: data.freeCreditsRemaining || 0,
       paidCreditsBalance: data.paidCreditsBalance || 0,
       autoRechargeEnabled: data.autoRechargeEnabled || false,
+      tier: data.tier || "free",
     });
   } catch (err) {
     console.error("API /billing/me error:", err);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/firebase/verifyToken";
+import { tierForPack } from "@/lib/products";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         uid,
         credits: pack.credits.toString(),
+        tier: tierForPack(packId),
       },
     });
 

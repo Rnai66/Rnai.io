@@ -32,6 +32,10 @@ BUILD_TYPE="${BUILD_TYPE:-release}"
 SPLIT="${SPLIT:-1}"
 mkdir -p "$OUT"
 
+# Gradle task name — portable (macOS ships bash 3.2, no ${var^} uppercase support)
+GRADLE_ASSEMBLE="assembleRelease"
+[ "$BUILD_TYPE" = "debug" ] && GRADLE_ASSEMBLE="assembleDebug"
+
 GREEN=$'\033[0;32m'; RED=$'\033[0;31m'; YEL=$'\033[1;33m'; NC=$'\033[0m'
 ok()   { echo "${GREEN}✓ $*${NC}"; }
 warn() { echo "${YEL}! $*${NC}"; }
@@ -59,7 +63,9 @@ collect() {
     cp "$f" "$OUT/${name}${abi}.apk"
     ok "→ $OUT/${name}${abi}.apk"
     found=1; BUILT+=("${name}${abi}.apk")
-  done < <(find "$searchdir" -name "*.apk" -type f 2>/dev/null | grep -E "/(release|debug)/" )
+    # Flutter → build/app/outputs/flutter-apk/app-<abi>-release.apk
+    # Gradle  → android/app/build/outputs/apk/release/app-release.apk
+  done < <(find "$searchdir" -name "*.apk" -type f 2>/dev/null | grep -vE "/intermediates/" | grep -Ei "(release|debug)" )
   [ "$found" = 1 ] || { err "ไม่พบ .apk ที่ build ออกมาใน $searchdir"; FAILED+=("$name"); }
 }
 
@@ -90,7 +96,7 @@ build_capacitor() {
     && npx cap sync android \
     && cd android \
     && chmod +x ./gradlew \
-    && ./gradlew "assemble${BUILD_TYPE^}" ) \
+    && ./gradlew "$GRADLE_ASSEMBLE" ) \
     && collect "$dir/android/app/build/outputs/apk" "$name" \
     || { err "$name build ล้มเหลว"; FAILED+=("$name"); }
 }
@@ -105,7 +111,7 @@ build_expo() {
     && { [ -d android ] || npx expo prebuild --platform android --no-install; } \
     && cd android \
     && chmod +x ./gradlew \
-    && ./gradlew "assemble${BUILD_TYPE^}" ) \
+    && ./gradlew "$GRADLE_ASSEMBLE" ) \
     && collect "$dir/android/app/build/outputs/apk" "$name" \
     || { err "$name build ล้มเหลว"; FAILED+=("$name"); }
   # ทางเลือก cloud (ไม่ต้องตั้ง Android SDK): eas build -p android --profile preview

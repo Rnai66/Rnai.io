@@ -11,7 +11,39 @@
 // Leave a platform out (or "") to show "Coming soon" for it.
 
 export type Platform = "ios" | "android" | "web" | "windows" | "mac";
-export type Tier = "free" | "pro" | "enterprise";
+export type Tier = "free" | "starter" | "pro" | "enterprise";
+
+// Membership hierarchy — a higher tier unlocks everything the lower tiers do.
+export const TIER_RANK: Record<Tier, number> = {
+  free: 0,
+  starter: 1,
+  pro: 2,
+  enterprise: 3,
+};
+
+/** True if a member on `userTier` may download a product requiring `productTier`. */
+export function hasAccess(userTier: Tier, productTier: Tier): boolean {
+  return (TIER_RANK[userTier] ?? 0) >= (TIER_RANK[productTier] ?? 0);
+}
+
+/** Map a Stripe pack id to the membership tier it grants. */
+export function tierForPack(packId: string): Tier {
+  if (packId === "pack_100") return "enterprise";
+  if (packId === "pack_20") return "pro";
+  if (packId === "pack_5") return "starter";
+  return "free";
+}
+
+/**
+ * Map a TrueMoney top-up amount (THB) to the membership tier it grants.
+ * Mirrors the Stripe packs (~$5 Starter / $20 Pro / $100 Enterprise at ~35 THB/$).
+ */
+export function tierForBaht(baht: number): Tier {
+  if (baht >= 3000) return "enterprise";
+  if (baht >= 700) return "pro";
+  if (baht > 0) return "starter";
+  return "free";
+}
 
 export interface Product {
   id: string;
@@ -20,7 +52,7 @@ export interface Product {
   taglineTh: string;   // Thai
   version: string;
   platforms: Platform[];
-  tier: Tier;          // "free" = any signed-in member can download
+  tier: Tier;          // minimum membership tier required to download
   icon: string;        // emoji
   color: string;       // accent hex
   downloads: Partial<Record<Platform, string>>; // direct installer URLs (gated)
@@ -35,7 +67,7 @@ export const PRODUCTS: Product[] = [
     taglineTh: "สร้างสรรค์ทุกอย่างด้วย AI — 18 สกิล 15 ภาษา",
     version: "2.0.0",
     platforms: ["ios", "android"],
-    tier: "free",
+    tier: "starter",
     icon: "🎨",
     color: "#9333EA",
     downloads: { android: "https://github.com/Rnai-io/Rnai/releases/latest" },
@@ -47,7 +79,7 @@ export const PRODUCTS: Product[] = [
     taglineTh: "จัดการรถ-ติดตาม GPS-ค่าใช้จ่าย สำหรับ SME ไทย",
     version: "1.0.0",
     platforms: ["ios", "android", "web"],
-    tier: "free",
+    tier: "enterprise",
     icon: "🚚",
     color: "#0EA5E9",
     downloads: { android: "https://github.com/Rnai-io/H2Hfleet/releases/latest" },
@@ -59,7 +91,7 @@ export const PRODUCTS: Product[] = [
     taglineTh: "จัดการการเงินส่วนตัวให้ง่ายขึ้น",
     version: "1.4.1",
     platforms: ["android"],
-    tier: "free",
+    tier: "enterprise",
     icon: "💰",
     color: "#10B981",
     downloads: { android: "https://github.com/Rnai66/Moneyma/releases/latest" },
@@ -71,7 +103,7 @@ export const PRODUCTS: Product[] = [
     taglineTh: "คำคมโดนใจ ให้ AI ช่วยคิดให้",
     version: "1.2.0",
     platforms: ["ios", "android"],
-    tier: "free",
+    tier: "pro",
     icon: "💬",
     color: "#F59E0B",
     downloads: { android: "https://github.com/Rnai66/QUOM/releases/latest" },
@@ -83,7 +115,7 @@ export const PRODUCTS: Product[] = [
     taglineTh: "ค้นหาแผงลอตเตอรี่ใกล้คุณ",
     version: "1.0.1",
     platforms: ["ios", "android", "web"],
-    tier: "free",
+    tier: "starter",
     icon: "🎯",
     color: "#EC4899",
     downloads: { android: "https://github.com/Rnai66/lotterymap/releases/latest" },
