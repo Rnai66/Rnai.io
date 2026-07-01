@@ -2,11 +2,14 @@ import { Provider } from "./types";
 import { HuggingFaceProvider } from "./providers/huggingface";
 import { TogetherProvider } from "./providers/together";
 import { OpenRouterProvider } from "./providers/openrouter";
+import { SelfHostedProvider } from "./providers/selfhosted";
 
 const providers: Record<string, Provider> = {
   huggingface: HuggingFaceProvider,
   together: TogetherProvider,
   openrouter: OpenRouterProvider,
+  // Self-hosted Rnai backup — last resort when external providers are down.
+  "self-hosted": SelfHostedProvider,
 };
 
 export async function executeWithFallback<T>(

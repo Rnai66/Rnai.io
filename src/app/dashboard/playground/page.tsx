@@ -111,6 +111,8 @@ type PromptTemplate = {
   tag: string;
   prompt: string;
   previewClass: string;
+  motif: string;
+  accent: string;
 };
 
 const PROMPT_TEMPLATES: PromptTemplate[] = [
@@ -118,6 +120,8 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     title: "Classic Romance",
     tag: "Romantic",
     previewClass: "from-[#2b1720] via-[#a6425d] to-[#f3c4a5]",
+    motif: "🌹",
+    accent: "#f3c4a5",
     prompt:
       "Create an original vintage romantic movie poster inspired by classic cinema of the 1950s, featuring two lovers under warm city lights, elegant dramatic composition, hand-painted poster texture, soft golden glow, expressive faces, nostalgic typography area with no readable text, rich film grain, timeless romantic atmosphere, not based on any real movie poster",
   },
@@ -125,6 +129,8 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     title: "Classic War",
     tag: "War",
     previewClass: "from-[#171812] via-[#60624a] to-[#d8c58a]",
+    motif: "🎖️",
+    accent: "#d8c58a",
     prompt:
       "Create an original vintage war movie poster inspired by classic cinema of the 1940s, showing brave soldiers silhouetted against a smoky battlefield sunrise, dramatic clouds, heroic composition, muted olive and sepia palette, hand-painted illustration style, aged paper texture, strong cinematic tension, empty title space with no readable text, not based on any real movie poster",
   },
@@ -132,6 +138,8 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     title: "Classic Biography",
     tag: "Biopic",
     previewClass: "from-[#1f1c18] via-[#7b5e3b] to-[#e8d6aa]",
+    motif: "🎩",
+    accent: "#e8d6aa",
     prompt:
       "Create an original vintage biographical movie poster inspired by classic prestige films of the 1960s, centered on a thoughtful historical figure at a desk with papers, warm spotlight, symbolic background montage of life achievements, dignified painterly realism, elegant sepia and gold tones, film grain, archival atmosphere, empty title area with no readable text, not based on any real person or real movie poster",
   },
@@ -139,6 +147,8 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     title: "Classic Drama",
     tag: "Drama",
     previewClass: "from-[#151923] via-[#41516b] to-[#c7b8a1]",
+    motif: "🎭",
+    accent: "#c7b8a1",
     prompt:
       "Create an original vintage drama movie poster inspired by classic cinema of the 1970s, featuring a lone character standing in rain near a glowing window, emotional expression, moody blue and amber lighting, painterly poster art, strong negative space, subtle film grain, melancholic atmosphere, empty title space with no readable text, not based on any real movie poster",
   },
@@ -146,6 +156,8 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     title: "Classic Comedy",
     tag: "Comedy",
     previewClass: "from-[#1d2630] via-[#e3a72f] to-[#f5ead0]",
+    motif: "🤹",
+    accent: "#e3a72f",
     prompt:
       "Create an original vintage comedy movie poster inspired by classic slapstick cinema of the 1930s, featuring a charming awkward character in an exaggerated funny situation on a city street, playful composition, warm cream and mustard colors, hand-painted poster texture, lively facial expression, whimsical motion lines, empty title space with no readable text, not based on any real comedian or real movie poster",
   },
@@ -512,7 +524,7 @@ export default function PlaygroundPage() {
                       <p className="text-sm font-medium text-white">🎬 Cinematic Posters</p>
                       <p className="text-xs text-gray-500">{t.playground.clickToFill}</p>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                       {PROMPT_TEMPLATES.map((template) => (
                         <button
                           key={template.title}
@@ -522,17 +534,51 @@ export default function PlaygroundPage() {
                             setResult(null);
                             setError("");
                           }}
-                          className="group overflow-hidden rounded-2xl border border-white/10 bg-black/30 text-left transition-all hover:-translate-y-0.5 hover:border-[#D77757]/50 hover:bg-white/[0.04]"
+                          className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#D77757]/60 hover:shadow-[0_12px_32px_-8px_rgba(215,119,87,0.35)]"
                         >
-                          <div className={`relative h-24 bg-gradient-to-br ${template.previewClass}`}>
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.45),transparent_24%),radial-gradient(circle_at_78%_70%,rgba(255,255,255,0.25),transparent_26%)]"></div>
-                            <div className="absolute bottom-2 left-2 rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+                          {/* Poster art (CSS only) */}
+                          <div className={`relative aspect-[3/4] bg-gradient-to-b ${template.previewClass}`}>
+                            {/* soft key light + spotlight */}
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_22%,rgba(255,255,255,0.5),transparent_55%)]" />
+                            {/* genre motif, large & faint like poster key art */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span
+                                className="text-5xl sm:text-6xl drop-shadow-[0_4px_18px_rgba(0,0,0,0.55)] transition-transform duration-500 group-hover:scale-110"
+                                style={{ filter: "saturate(1.1)" }}
+                              >
+                                {template.motif}
+                              </span>
+                            </div>
+                            {/* film grain */}
+                            <div
+                              className="absolute inset-0 opacity-[0.12] mix-blend-overlay"
+                              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
+                            />
+                            {/* cinematic vignette + bottom fade */}
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.55)_100%)]" />
+                            <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 to-transparent" />
+                            {/* letterbox bars */}
+                            <div className="absolute inset-x-0 top-0 h-[6px] bg-black/60" />
+                            <div className="absolute inset-x-0 bottom-0 h-[6px] bg-black/60" />
+                            {/* genre tag */}
+                            <div
+                              className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-black/90 backdrop-blur-sm"
+                              style={{ backgroundColor: template.accent }}
+                            >
                               {template.tag}
                             </div>
+                            {/* title on the poster */}
+                            <div className="absolute inset-x-0 bottom-0 p-3">
+                              <p className="font-outfit text-sm font-extrabold leading-tight text-white drop-shadow-md">
+                                {template.title}
+                              </p>
+                              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-white/55">
+                                Vintage · Poster
+                              </p>
+                            </div>
                           </div>
-                          <div className="p-3">
-                            <p className="text-sm font-semibold text-white group-hover:text-[#D77757] transition-colors">{template.title}</p>
-                          </div>
+                          {/* hover accent ring */}
+                          <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/0 group-hover:ring-[#D77757]/40 transition" />
                         </button>
                       ))}
                     </div>

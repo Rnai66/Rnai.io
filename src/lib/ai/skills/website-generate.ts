@@ -77,7 +77,7 @@ Return ONLY the complete HTML code starting with <!DOCTYPE html> and ending with
 Begin generating the website now:`;
 
   // Use OpenRouter/Together for text generation with higher context limits
-  const providers = ["openrouter", "together"];
+  const providers = ["openrouter", "together", "self-hosted"];
 
   try {
     const { result, provider: usedProvider } = await executeWithFallback(providers, async (provider) => {

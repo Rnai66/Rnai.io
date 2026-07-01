@@ -1,7 +1,7 @@
 import { executeWithFallback } from "../router";
 
 export async function textSummarizeSkill(text: string) {
-  const providers = ["openrouter", "together"]; 
+  const providers = ["openrouter", "together", "self-hosted"]; 
   const systemPrompt = "You are a professional summarizer. Provide a concise, clear, and accurate summary of the following text.";
   
   return executeWithFallback(providers, async (provider) => {

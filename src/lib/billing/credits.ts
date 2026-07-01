@@ -1,4 +1,59 @@
 import { getAdminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
+
+/**
+ * Add paid credits to a user, idempotently keyed on `ref` (e.g. a voucher id
+ * or Stripe session id). If a "topup" ledger entry with the same ref already
+ * exists, the call is a no-op and returns { added: false, alreadyProcessed: true }.
+ * Used by top-up flows (Stripe, TrueMoney voucher redeem).
+ */
+export async function addPaidCredits(
+  uid: string,
+  credits: number,
+  ref: string,
+  meta: Record<string, unknown> = {}
+): Promise<{ added: boolean; alreadyProcessed: boolean; balanceAfter: number }> {
+  const db = getAdminDb();
+  const userRef = db.collection("users").doc(uid);
+  const dupQuery = db
+    .collection("ledgerEntries")
+    .where("uid", "==", uid)
+    .where("ref", "==", ref)
+    .where("type", "==", "topup")
+    .limit(1);
+
+  return await db.runTransaction(async (transaction) => {
+    const [userDoc, dupSnap] = await Promise.all([
+      transaction.get(userRef),
+      transaction.get(dupQuery),
+    ]);
+    if (!userDoc.exists) throw new Error("User not found");
+
+    const data = userDoc.data()!;
+    const free = data.freeCreditsRemaining || 0;
+    const paid = data.paidCreditsBalance || 0;
+
+    if (!dupSnap.empty) {
+      return { added: false, alreadyProcessed: true, balanceAfter: free + paid };
+    }
+
+    const newPaid = paid + credits;
+    transaction.update(userRef, { paidCreditsBalance: FieldValue.increment(credits) });
+
+    const ledgerRef = db.collection("ledgerEntries").doc();
+    transaction.set(ledgerRef, {
+      uid,
+      type: "topup",
+      credits,
+      balanceAfter: free + newPaid,
+      ref,
+      createdAt: new Date(),
+      ...meta,
+    });
+
+    return { added: true, alreadyProcessed: false, balanceAfter: free + newPaid };
+  });
+}
 
 export async function chargeCredits(uid: string, cost: number, refId: string): Promise<boolean> {
   const db = getAdminDb();

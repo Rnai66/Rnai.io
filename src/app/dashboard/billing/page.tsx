@@ -23,9 +23,13 @@ function BillingPageContent() {
   const [ready, setReady] = useState(false);
   const [billing, setBilling] = useState<BillingData | null>(null);
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
+  const [voucher, setVoucher] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemMsg, setRedeemMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const { language } = useLanguage();
 
   const t = translations[language];
+  const th = language === "th";
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,6 +75,35 @@ function BillingPageContent() {
       console.error("Checkout error:", error);
     }
     setLoadingPack(null);
+  };
+
+  const handleRedeem = async () => {
+    if (!voucher.trim()) return;
+    setRedeeming(true);
+    setRedeemMsg(null);
+    try {
+      const res = await fetch("/api/billing/truemoney/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voucher: voucher.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setRedeemMsg({
+          ok: true,
+          text: th
+            ? `เติมสำเร็จ +${(data.credits_added || 0).toLocaleString()} เครดิต (${data.amount_baht} บาท)`
+            : `Added +${(data.credits_added || 0).toLocaleString()} credits (฿${data.amount_baht})`,
+        });
+        setVoucher("");
+        fetchBilling();
+      } else {
+        setRedeemMsg({ ok: false, text: data.message || (th ? "เติมไม่สำเร็จ" : "Redeem failed") });
+      }
+    } catch {
+      setRedeemMsg({ ok: false, text: th ? "เครือข่ายขัดข้อง" : "Network error" });
+    }
+    setRedeeming(false);
   };
 
   if (!ready) {
@@ -173,6 +206,109 @@ function BillingPageContent() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* TrueMoney top-up */}
+        <div className="mt-16">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-2xl font-outfit font-bold text-white">
+              {th ? "เติมเงินด้วยทรูมันนี่" : "Top up with TrueMoney"}
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#ff6a13]/20 text-[#ff8a4c] text-xs font-bold uppercase tracking-wider">
+              TrueMoney
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* QR transfer */}
+            <div className="glass-card p-8 rounded-3xl flex flex-col items-center text-center">
+              <p className="text-sm text-gray-400 mb-4">
+                {th ? "สแกนด้วยแอปทรูมันนี่เพื่อโอนเข้าบัญชี" : "Scan with the TrueMoney app to transfer"}
+              </p>
+              <div className="bg-white rounded-2xl p-3 w-48 h-48 flex items-center justify-center">
+                {/* วางไฟล์ QR จริงที่ public/truemoney-qr.png */}
+                <img
+                  src="/truemoney-qr.png"
+                  alt="TrueMoney QR"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    img.style.display = "none";
+                    const ph = img.nextElementSibling as HTMLElement | null;
+                    if (ph) ph.style.display = "flex";
+                  }}
+                />
+                <div
+                  style={{ display: "none" }}
+                  className="flex-col items-center justify-center text-center text-gray-400 text-[11px] px-3 leading-relaxed"
+                >
+                  {th ? "วางไฟล์ QR ที่ public/truemoney-qr.png" : "Add QR file at public/truemoney-qr.png"}
+                </div>
+              </div>
+              <p className="mt-4 font-outfit font-bold text-white">ชนะ คง***</p>
+              <p className="text-xs text-gray-400">บัญชีทรูมันนี่ · 095-***-7090</p>
+              <p className="mt-3 text-[11px] text-gray-500 max-w-xs">
+                {th
+                  ? "โอนแล้วนำลิงก์ซองของขวัญ (อังเปา) มาเติมด้านขวาเพื่อรับเครดิตทันที"
+                  : "After transfer, paste a gift link on the right for instant credit"}
+              </p>
+
+              <div className="mt-5 w-full">
+                <div className="w-full py-3 rounded-xl font-semibold text-sm flex justify-center items-center gap-2 bg-white/[0.04] border border-white/10 text-gray-500 cursor-not-allowed">
+                  📤 {th ? "อัปโหลดสลิปการโอน" : "Upload transfer slip"}
+                  <span className="px-2 py-0.5 rounded-full bg-white/10 text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+                    {th ? "เร็วๆ นี้" : "Soon"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Gift voucher redeem (auto credit) */}
+            <div className="glass-card p-8 rounded-3xl flex flex-col">
+              <h3 className="text-lg font-outfit font-bold text-white mb-1">
+                {th ? "เติมด้วยซองอังเปา (อัตโนมัติ)" : "Redeem gift voucher (instant)"}
+              </h3>
+              <p className="text-xs text-gray-400 mb-5">
+                {th
+                  ? "วางลิงก์ของขวัญทรูมันนี่ (gift.truemoney.com) หรือรหัส แล้วรับเครดิตทันที"
+                  : "Paste a TrueMoney gift link or code to get credits instantly"}
+              </p>
+              <input
+                value={voucher}
+                onChange={(e) => setVoucher(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
+                placeholder="https://gift.truemoney.com/campaign/?v=..."
+                className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#D77757]/60 mb-3"
+              />
+              <button
+                onClick={handleRedeem}
+                disabled={redeeming || !voucher.trim()}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm bg-[#ff6a13] text-white hover:bg-[#ff7d31] disabled:opacity-50 transition-all flex justify-center items-center"
+              >
+                {redeeming ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                ) : th ? (
+                  "เติมเครดิต"
+                ) : (
+                  "Redeem"
+                )}
+              </button>
+              {redeemMsg && (
+                <div
+                  className={`mt-4 p-3 rounded-xl text-sm ${
+                    redeemMsg.ok
+                      ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                      : "bg-red-500/10 border border-red-500/20 text-red-400"
+                  }`}
+                >
+                  {redeemMsg.text}
+                </div>
+              )}
+              <p className="mt-auto pt-4 text-[11px] text-gray-500">
+                {th ? "อัตรา 3 เครดิต / 1 บาท" : "3 credits per ฿1"}
+              </p>
+            </div>
+          </div>
         </div>
       </main>
     </div>

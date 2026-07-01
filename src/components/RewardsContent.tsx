@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+
+interface BoardRow { rank: number; name: string; points: number; prize: number; isMe: boolean }
+interface BoardMe { rank: number | null; points: number; eligible: boolean; minPoints: number }
+interface Board { period: string; pool: number; top: BoardRow[]; me: BoardMe }
 
 const T = {
   th: {
@@ -95,6 +100,21 @@ const T = {
 export default function RewardsContent() {
   const { language, setLanguage } = useLanguage();
   const t = T[language === "th" ? "th" : "en"];
+  const th = language === "th";
+
+  // ── Live leaderboard (signed-in users) ──
+  const [board, setBoard] = useState<Board | null>(null);
+  const [boardState, setBoardState] = useState<"loading" | "ok" | "anon">("loading");
+  useEffect(() => {
+    fetch("/api/rewards/leaderboard")
+      .then(async (res) => {
+        if (res.status === 401) { setBoardState("anon"); return; }
+        const data = await res.json();
+        setBoard(data);
+        setBoardState("ok");
+      })
+      .catch(() => setBoardState("anon"));
+  }, []);
 
   return (
     <div className="min-h-screen relative overflow-hidden" lang={language}>
@@ -151,6 +171,69 @@ export default function RewardsContent() {
               <p className="text-sm text-gray-400 leading-relaxed">{item.desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* Live leaderboard */}
+        <h2 className="font-outfit text-2xl font-bold text-white mb-1">
+          📊 {th ? "อันดับเดือนนี้ (สด)" : "This Month's Standings (Live)"}
+        </h2>
+        <p className="text-sm text-gray-500 mb-6">
+          {board ? `${th ? "รอบ" : "Period"} ${board.period} · ${th ? "กองรางวัลปัจจุบัน" : "current pool"} ${board.pool.toLocaleString()} ${th ? "เครดิต" : "credits"}` : " "}
+        </p>
+        <div className="glass-card rounded-2xl p-5 sm:p-7 mb-16">
+          {boardState === "loading" && (
+            <p className="text-sm text-gray-500 text-center py-6">{th ? "กำลังโหลดอันดับ..." : "Loading standings..."}</p>
+          )}
+          {boardState === "anon" && (
+            <div className="text-center py-6">
+              <p className="text-sm text-gray-400 mb-4">
+                {th ? "เข้าสู่ระบบเพื่อดูอันดับสดและคะแนนของคุณ" : "Sign in to see live standings and your rank"}
+              </p>
+              <Link href="/auth/login" className="inline-block px-6 py-2.5 bg-white/10 border border-white/15 text-white text-sm font-medium rounded-full hover:bg-white/20 transition-all">
+                {th ? "เข้าสู่ระบบ" : "Sign in"}
+              </Link>
+            </div>
+          )}
+          {boardState === "ok" && board && (
+            <>
+              {board.top.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-6">
+                  {th ? "ยังไม่มีผู้ติดอันดับเดือนนี้ — เป็นคนแรกเลย!" : "No one on the board yet — be the first!"}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {board.top.map((row) => (
+                    <div
+                      key={row.rank}
+                      className={`flex items-center gap-4 rounded-xl px-4 py-3 ${
+                        row.isMe ? "bg-[#D77757]/15 border border-[#D77757]/40" : "bg-white/[0.03]"
+                      }`}
+                    >
+                      <span className="w-8 text-center font-outfit font-bold text-lg">
+                        {row.rank === 1 ? "🥇" : row.rank === 2 ? "🥈" : row.rank === 3 ? "🥉" : row.rank}
+                      </span>
+                      <span className="flex-1 text-sm text-gray-200 truncate">
+                        {row.name}{row.isMe ? (th ? " (คุณ)" : " (you)") : ""}
+                      </span>
+                      <span className="text-sm text-gray-400">{row.points.toLocaleString()} pts</span>
+                      <span className="text-sm font-semibold text-[#D77757] w-24 text-right">
+                        +{row.prize.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-5 pt-4 border-t border-white/10 text-sm text-gray-300 text-center">
+                {board.me.rank
+                  ? (th
+                      ? <>อันดับของคุณ: <b className="text-[#D77757]">#{board.me.rank}</b> · {board.me.points.toLocaleString()} คะแนน</>
+                      : <>Your rank: <b className="text-[#D77757]">#{board.me.rank}</b> · {board.me.points.toLocaleString()} points</>)
+                  : (th
+                      ? <>คะแนนของคุณ: {board.me.points.toLocaleString()} — {board.me.eligible ? "ยังไม่ติด Top 10" : `ใช้ครบ ${board.me.minPoints} เครดิตเพื่อมีสิทธิ์`}</>
+                      : <>Your points: {board.me.points.toLocaleString()} — {board.me.eligible ? "not in Top 10 yet" : `use ${board.me.minPoints} credits to qualify`}</>)}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Monthly */}
