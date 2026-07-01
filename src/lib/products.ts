@@ -58,6 +58,7 @@ export interface Product {
   downloads: Partial<Record<Platform, string>>; // direct installer URLs (gated)
   store?: Partial<Record<Platform, string>>;     // public store links (optional)
   webApp?: string;                                // public web-app URL (ungated, opens directly)
+  landing?: string;                               // override "Details" landing URL
 }
 
 export const PRODUCTS: Product[] = [
@@ -98,6 +99,7 @@ export const PRODUCTS: Product[] = [
     color: "#10B981",
     downloads: { android: "https://github.com/Rnai66/Moneyma/releases/latest" },
     webApp: "https://moneyma-app.netlify.app/",
+    landing: "https://moneyma-detail.netlify.app/",
   },
   {
     id: "quom",
@@ -122,6 +124,8 @@ export const PRODUCTS: Product[] = [
     icon: "🎯",
     color: "#EC4899",
     downloads: { android: "https://github.com/Rnai66/lotterymap/releases/latest" },
+    store: { android: "https://play.google.com/store/apps/details?id=com.lotterymap.th" },
+    webApp: "https://lotterymap99.web.app/",
   },
 ];
 

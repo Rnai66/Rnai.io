@@ -194,7 +194,7 @@ export default function ProductsPage() {
                     </Link>
                   )}
                   <a
-                    href={`${LANDING_BASE}/${p.id}.html`}
+                    href={p.landing || `${LANDING_BASE}/${p.id}.html`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 border border-white/10 hover:border-[#D77757]/50 hover:text-white hover:bg-white/[0.04] transition-all"
@@ -210,6 +210,16 @@ export default function ProductsPage() {
                       style={{ backgroundColor: `${p.color}26`, border: `1px solid ${p.color}66` }}
                     >
                       🌐 {th ? "เว็บแอป" : "Web app"}
+                    </a>
+                  )}
+                  {p.store?.android && (
+                    <a
+                      href={p.store.android}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#01875f] hover:opacity-90 transition-all"
+                    >
+                      ▶ Google Play
                     </a>
                   )}
                 </div>
