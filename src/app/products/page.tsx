@@ -118,10 +118,14 @@ export default function ProductsPage() {
               >
                 <div className="flex items-start gap-4">
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 overflow-hidden"
                     style={{ backgroundColor: `${p.color}1A` }}
                   >
-                    {p.icon}
+                    {p.iconImg ? (
+                      <img src={p.iconImg} alt={p.name} className="w-full h-full object-cover rounded-2xl" />
+                    ) : (
+                      p.icon
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">

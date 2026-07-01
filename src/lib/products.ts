@@ -53,7 +53,8 @@ export interface Product {
   version: string;
   platforms: Platform[];
   tier: Tier;          // minimum membership tier required to download
-  icon: string;        // emoji
+  icon: string;        // emoji (fallback)
+  iconImg?: string;    // real app icon in /public/apps (overrides emoji)
   color: string;       // accent hex
   downloads: Partial<Record<Platform, string>>; // direct installer URLs (gated)
   store?: Partial<Record<Platform, string>>;     // public store links (optional)
@@ -71,6 +72,7 @@ export const PRODUCTS: Product[] = [
     platforms: ["ios", "android"],
     tier: "starter",
     icon: "🎨",
+    iconImg: "/apps/rnai-mobile.png",
     color: "#9333EA",
     downloads: { android: "https://github.com/Rnai-io/Rnai/releases/latest" },
   },
@@ -83,6 +85,7 @@ export const PRODUCTS: Product[] = [
     platforms: ["ios", "android", "web"],
     tier: "enterprise",
     icon: "🚚",
+    iconImg: "/apps/h2hfleet.png",
     color: "#0EA5E9",
     downloads: { android: "https://github.com/Rnai-io/H2Hfleet/releases/latest" },
     webApp: "https://h2hfleet.netlify.app/",
@@ -96,6 +99,7 @@ export const PRODUCTS: Product[] = [
     platforms: ["android", "web"],
     tier: "enterprise",
     icon: "💰",
+    iconImg: "/apps/moneyma.png",
     color: "#10B981",
     downloads: { android: "https://github.com/Rnai66/Moneyma/releases/latest" },
     webApp: "https://moneyma-app.netlify.app/",
@@ -110,6 +114,7 @@ export const PRODUCTS: Product[] = [
     platforms: ["ios", "android"],
     tier: "pro",
     icon: "💬",
+    iconImg: "/apps/quom.png",
     color: "#F59E0B",
     downloads: { android: "https://github.com/Rnai66/QUOM/releases/latest" },
   },
@@ -122,6 +127,7 @@ export const PRODUCTS: Product[] = [
     platforms: ["ios", "android", "web"],
     tier: "starter",
     icon: "🎯",
+    iconImg: "/apps/lotterymap.png",
     color: "#EC4899",
     downloads: { android: "https://github.com/Rnai66/lotterymap/releases/latest" },
     store: { android: "https://play.google.com/store/apps/details?id=com.lotterymap.th" },
