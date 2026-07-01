@@ -5,9 +5,22 @@ import { auth } from "@/lib/firebase/client";
 interface ApiKey {
   id: string;
   name: string;
-  createdAt: string;
-  lastUsedAt: string | null;
+  createdAt: unknown;
+  lastUsedAt: unknown;
   isActive: boolean;
+}
+
+// Firestore Timestamps serialize to { _seconds } / { seconds }; also handle ISO/number.
+function fmtDate(v: unknown): string {
+  if (!v) return "—";
+  let d: Date;
+  if (typeof v === "object" && v !== null) {
+    const secs = (v as any)._seconds ?? (v as any).seconds;
+    d = secs != null ? new Date(secs * 1000) : new Date(NaN);
+  } else {
+    d = new Date(v as string | number);
+  }
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
 }
 
 export default function ApiKeyManager() {
@@ -144,10 +157,10 @@ export default function ApiKeyManager() {
                     <div className="text-xs font-mono text-gray-500">{key.id.substring(0, 12)}...</div>
                   </td>
                   <td className="px-6 py-4 text-gray-400 hidden sm:table-cell">
-                    {new Date(key.createdAt).toLocaleDateString()}
+                    {fmtDate(key.createdAt)}
                   </td>
                   <td className="px-6 py-4 text-gray-400 hidden md:table-cell">
-                    {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}
+                    {key.lastUsedAt ? fmtDate(key.lastUsedAt) : "Never"}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button

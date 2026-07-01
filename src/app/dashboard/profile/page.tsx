@@ -5,11 +5,21 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import Navbar from "@/components/Navbar";
+import ApiKeyManager from "@/components/ApiKeyManager";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { t } from "@/lib/i18n/translations";
 import { translations } from "@/lib/i18n/translations";
 
 type TabId = "language" | "account" | "apiKeys" | "billing";
+
+interface UsageEntry {
+  id: string;
+  skill: string;
+  provider: string | null;
+  status: string;
+  latencyMs: number | null;
+  createdAt: string | null;
+}
 
 export default function ProfilePage() {
   const [email, setEmail] = useState<string | null>(null);
@@ -21,8 +31,10 @@ export default function ProfilePage() {
   const [country, setCountry] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [usage, setUsage] = useState<UsageEntry[]>([]);
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
+  const dash = translations[language].dashboard;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -43,6 +55,15 @@ export default function ProfilePage() {
           }
         } catch (e) {
           console.error("Failed to load profile:", e);
+        }
+        try {
+          const usageRes = await fetch("/api/usage?limit=8");
+          if (usageRes.ok) {
+            const data = await usageRes.json();
+            setUsage(data.usage || []);
+          }
+        } catch (e) {
+          console.error("Failed to load usage:", e);
         }
         setReady(true);
       }
@@ -88,15 +109,20 @@ export default function ProfilePage() {
     <div className="min-h-screen pt-24 pb-12 relative overflow-hidden bg-[#050505]">
       <Navbar />
 
-      {/* Background blurs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full mix-blend-screen filter blur-[128px]"></div>
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-[#D77757]/20 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#9333EA]/10 rounded-full blur-[140px]"></div>
 
-      <main className="max-w-4xl mx-auto px-6 w-full relative z-10">
+      <main className="max-w-4xl mx-auto px-6 w-full relative z-10 animate-fade-in">
         <div className="mb-8">
-          <h1 className="text-3xl font-outfit font-bold text-white tracking-tight">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/[0.06] border border-white/10 text-gray-300 mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+            {email}
+          </span>
+          <h1 className="font-outfit text-4xl sm:text-5xl font-bold tracking-tight text-gradient">
             {language === "en" ? "Profile Settings" : "ตั้งค่าโปรไฟล์"}
           </h1>
-          <p className="text-sm text-gray-400 mt-1.5">
+          <p className="text-sm text-gray-400 mt-2">
             {language === "en" ? "Manage your account and preferences" : "จัดการบัญชีและการตั้งค่าของคุณ"}
           </p>
         </div>
@@ -107,12 +133,13 @@ export default function ProfilePage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab
-                  ? "bg-[#D77757] text-white"
-                  : "bg-white/5 text-gray-400 hover:bg-white/10"
+                  ? "bg-[#D77757] text-white shadow-lg shadow-[#D77757]/20"
+                  : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
               }`}
             >
+              <span className="mr-1.5">{{ account: "👤", language: "🌐", apiKeys: "🔑", billing: "💳" }[tab]}</span>
               {language === "en"
                 ? tab === "account"
                   ? "Account"
@@ -278,20 +305,62 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* API Keys */}
+          {/* API Keys + Usage history */}
           {activeTab === "apiKeys" && (
-            <div className="space-y-6">
-              <p className="text-sm text-gray-400">
-                {language === "en"
-                  ? "Manage your API keys. Go to Dashboard to create and manage keys."
-                  : "จัดการ API keys ของคุณ ไปที่ Dashboard เพื่อสร้างและจัดการ keys"}
-              </p>
-              <a
-                href="/dashboard"
-                className="inline-block px-5 py-2.5 bg-[#D77757] text-white rounded-xl font-medium hover:bg-[#c46543] transition-all"
-              >
-                {language === "en" ? "Go to API Keys" : "ไปยัง API Keys"}
-              </a>
+            <div className="space-y-10">
+              <ApiKeyManager />
+
+              <div className="pt-8 border-t border-white/10">
+                <div className="mb-6">
+                  <h2 className="text-xl font-outfit font-bold text-white mb-2">{dash.usageHistory}</h2>
+                  <p className="text-sm text-gray-400">{dash.latestApiCalls}</p>
+                </div>
+
+                {usage.length === 0 ? (
+                  <div className="text-center py-10 bg-black/20 rounded-2xl border border-white/5 border-dashed">
+                    <p className="text-sm text-gray-400">{dash.noUsageYet}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-white/5 bg-black/30">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
+                        <tr>
+                          <th className="px-5 py-4 font-medium">{dash.skillColumn}</th>
+                          <th className="px-5 py-4 font-medium hidden sm:table-cell">{dash.providerColumn}</th>
+                          <th className="px-5 py-4 font-medium hidden md:table-cell">{dash.latencyColumn}</th>
+                          <th className="px-5 py-4 font-medium">{dash.statusColumn}</th>
+                          <th className="px-5 py-4 font-medium text-right hidden sm:table-cell">{dash.timeColumn}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {usage.map((entry) => (
+                          <tr key={entry.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-5 py-4 font-medium text-white">{entry.skill}</td>
+                            <td className="px-5 py-4 text-gray-400 hidden sm:table-cell">{entry.provider || "-"}</td>
+                            <td className="px-5 py-4 text-gray-400 hidden md:table-cell">
+                              {entry.latencyMs ? `${entry.latencyMs}ms` : "-"}
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                entry.status === "success"
+                                  ? "bg-green-500/10 text-green-400"
+                                  : entry.status === "cached"
+                                    ? "bg-blue-500/10 text-blue-400"
+                                    : "bg-red-500/10 text-red-400"
+                              }`}>
+                                {entry.status}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-gray-400 text-right hidden sm:table-cell">
+                              {entry.createdAt ? new Date(entry.createdAt).toLocaleString(language === "th" ? "th-TH" : "en-US") : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -304,7 +373,7 @@ export default function ProfilePage() {
                   : "ดูข้อมูลการเรียกเก็บเงินและการใช้งาน ตรวจสอบแดชบอร์ดเพื่อดูรายละเอียด"}
               </p>
               <a
-                href="/dashboard"
+                href="/dashboard/billing"
                 className="inline-block px-5 py-2.5 bg-[#D77757] text-white rounded-xl font-medium hover:bg-[#c46543] transition-all"
               >
                 {language === "en" ? "Go to Billing" : "ไปยังการเรียกเก็บเงิน"}

@@ -96,7 +96,10 @@ type RunResult = {
 type ChatMessage = {
   role: "user" | "assistant";
   text: string;
+  model?: string; // which model answered (rnai-llm | gemini-2.5-flash)
 };
+
+type ChatQuota = { limit: number; used: number; remaining: number };
 
 type PromptAttachment = {
   name: string;
@@ -243,8 +246,13 @@ export default function PlaygroundPage() {
   const [error, setError] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [chatQuota, setChatQuota] = useState<ChatQuota | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { role: "assistant", text: "Ask me anything. Gemini chat is free for signed-in users." },
+    {
+      role: "assistant",
+      text: "สวัสดีครับ ผมคือ Rnai AI — ถามอะไรก็ได้เลย ฟรีสำหรับสมาชิก / Hi, I'm Rnai AI. Ask me anything — free for members.",
+      model: "rnai-llm",
+    },
   ]);
   const [activeCategory, setActiveCategory] = useState<SkillConfig["category"]>("Image");
   const router = useRouter();
@@ -378,18 +386,22 @@ export default function PlaygroundPage() {
     setChatMessages((current) => [...current, { role: "user", text: message }]);
 
     try {
-      const res = await fetch("/api/gemini/chat", {
+      const res = await fetch("/api/rnai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gemini chat failed");
-      setChatMessages((current) => [...current, { role: "assistant", text: data.text }]);
+      if (!res.ok) throw new Error(data.error || "Chat failed");
+      if (data.quota) setChatQuota(data.quota as ChatQuota);
+      setChatMessages((current) => [
+        ...current,
+        { role: "assistant", text: data.text, model: data.model },
+      ]);
     } catch (err) {
       setChatMessages((current) => [
         ...current,
-        { role: "assistant", text: err instanceof Error ? err.message : "Gemini chat failed" },
+        { role: "assistant", text: err instanceof Error ? err.message : "Chat failed" },
       ]);
     } finally {
       setChatLoading(false);
@@ -405,14 +417,16 @@ export default function PlaygroundPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
+    <div className="min-h-screen pt-24 pb-12 relative overflow-hidden">
       <Navbar />
+      <div className="pointer-events-none absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-[#D77757]/20 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#9333EA]/10 rounded-full blur-[140px]"></div>
 
-      <main className="max-w-6xl mx-auto px-6 w-full">
+      <main className="max-w-6xl mx-auto px-6 w-full relative z-10 animate-fade-in">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-outfit font-bold text-white tracking-tight">{t.playground.title}</h1>
-            <p className="text-sm text-gray-400 mt-1.5">{t.playground.subtitle}</p>
+            <h1 className="font-outfit text-4xl sm:text-5xl font-bold tracking-tight text-gradient">{t.playground.title}</h1>
+            <p className="text-sm text-gray-400 mt-2">{t.playground.subtitle}</p>
           </div>
           <button
             onClick={() => router.push("/dashboard")}
@@ -939,13 +953,44 @@ export default function PlaygroundPage() {
           </section>
 
           <section className="glass-card rounded-3xl p-6 md:p-8 flex flex-col min-h-[640px]">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-xl font-outfit font-bold text-white">{t.playground.geminiChat}</h2>
-                <p className="text-sm text-gray-400 mt-1">{t.playground.freeChatSubtitle}</p>
+                <h2 className="text-xl font-outfit font-bold text-white flex items-center gap-2">
+                  ⚡ {language === "th" ? "แชท Rnai AI" : "Rnai AI Chat"}
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  {language === "th" ? "ขับเคลื่อนด้วย Rnai LLM — ฟรีสำหรับสมาชิก" : "Powered by Rnai LLM — free for members"}
+                </p>
               </div>
               <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-wider">{t.common.free}</span>
             </div>
+
+            {/* Monthly free-token quota bar */}
+            {chatQuota && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">
+                  <span>{language === "th" ? "โควตา Rnai LLM เดือนนี้" : "Rnai LLM quota this month"}</span>
+                  <span className="font-medium text-gray-300">
+                    {language === "th"
+                      ? `เหลือ ${chatQuota.remaining.toLocaleString()}/${chatQuota.limit.toLocaleString()} โทเคน`
+                      : `${chatQuota.remaining.toLocaleString()}/${chatQuota.limit.toLocaleString()} tokens left`}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#D77757] to-[#e89073] transition-all duration-500"
+                    style={{ width: `${Math.max(2, Math.min(100, (chatQuota.remaining / chatQuota.limit) * 100))}%` }}
+                  />
+                </div>
+                {chatQuota.remaining <= 0 && (
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    {language === "th"
+                      ? "โควตาหมดแล้ว — สลับไปใช้ Gemini ฟรีอัตโนมัติ"
+                      : "Quota used up — automatically on free Gemini now"}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto rounded-2xl bg-black/25 border border-white/5 p-4 space-y-3 mb-4">
               {chatMessages.map((message, index) => (
@@ -957,9 +1002,14 @@ export default function PlaygroundPage() {
                   }`}>
                     {message.text}
                   </div>
+                  {message.role === "assistant" && message.model && (
+                    <p className="text-[10px] text-gray-500 mt-1 ml-1">
+                      {message.model === "rnai-llm" ? "⚡ Rnai LLM" : "✨ Gemini"}
+                    </p>
+                  )}
                 </div>
               ))}
-              {chatLoading && <p className="text-sm text-gray-500">{t.playground.geminiThinking}</p>}
+              {chatLoading && <p className="text-sm text-gray-500">{language === "th" ? "Rnai กำลังคิด..." : "Rnai is thinking..."}</p>}
             </div>
 
             <div className="flex gap-3">

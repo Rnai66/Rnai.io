@@ -38,7 +38,10 @@ export async function addPaidCredits(
     }
 
     const newPaid = paid + credits;
-    transaction.update(userRef, { paidCreditsBalance: FieldValue.increment(credits) });
+    transaction.update(userRef, {
+      paidCreditsBalance: FieldValue.increment(credits),
+      lastTopupAt: new Date(),
+    });
 
     const ledgerRef = db.collection("ledgerEntries").doc();
     transaction.set(ledgerRef, {

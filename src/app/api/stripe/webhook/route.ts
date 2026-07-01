@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
           const newBalance = currentPaid + credits;
 
           transaction.update(userRef, {
-            paidCreditsBalance: FieldValue.increment(credits)
+            paidCreditsBalance: FieldValue.increment(credits),
+            lastTopupAt: new Date()
           });
 
           const ledgerRef = db.collection("ledgerEntries").doc();

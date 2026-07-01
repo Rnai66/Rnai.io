@@ -116,10 +116,44 @@ export default function RewardsContent() {
       .catch(() => setBoardState("anon"));
   }, []);
 
+  // ── Scroll reveal: fade/slide elements in as they enter the viewport ──
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("reveal-in");
+            io.unobserve(e.target);
+          }
+        }),
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [boardState]);
+
+  // ── Count-up animation for the live prize pool ──
+  const [poolDisplay, setPoolDisplay] = useState(0);
+  useEffect(() => {
+    const target = board?.pool || 0;
+    if (target <= 0) { setPoolDisplay(0); return; }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / 1200);
+      setPoolDisplay(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [board]);
+
   return (
     <div className="min-h-screen relative overflow-hidden" lang={language}>
-      <div className="absolute top-0 left-1/3 w-96 h-96 bg-[#D77757] rounded-full mix-blend-screen filter blur-[128px] opacity-15 pointer-events-none"></div>
-      <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[128px] opacity-10 pointer-events-none"></div>
+      <div className="absolute top-0 left-1/3 w-96 h-96 bg-[#D77757] rounded-full mix-blend-screen filter blur-[128px] opacity-20 pointer-events-none animate-blob"></div>
+      <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[128px] opacity-15 pointer-events-none animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-10 left-1/4 w-80 h-80 bg-yellow-500 rounded-full mix-blend-screen filter blur-[140px] opacity-10 pointer-events-none animate-float-slow"></div>
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-14 sm:py-20 relative z-10">
         {/* Top bar */}
@@ -145,28 +179,37 @@ export default function RewardsContent() {
 
         {/* Hero */}
         <div className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-xs font-medium text-gray-300 tracking-wide uppercase mb-6">
+          <span data-reveal className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-xs font-medium text-gray-300 tracking-wide uppercase mb-6">
             <span className="w-2 h-2 rounded-full bg-[#D77757] animate-pulse"></span>
             {t.badge}
           </span>
-          <h1 className="font-outfit text-4xl sm:text-6xl font-extrabold tracking-tight mb-4">
-            🏆 <span className="text-gradient">{t.title}</span>
+          <h1 data-reveal style={{ transitionDelay: "80ms" }} className="font-outfit text-4xl sm:text-6xl font-extrabold tracking-tight mb-4">
+            <span className="inline-block animate-float">🏆</span>{" "}
+            <span className="text-gradient animate-gradient-text inline-block">{t.title}</span>
           </h1>
-          <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">{t.subtitle}</p>
-          <Link
-            href="/dashboard/playground"
-            className="inline-block px-8 py-3.5 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-all shadow-[0_0_40px_rgba(255,255,255,0.25)]"
-          >
-            ⚡ {t.cta}
-          </Link>
+          <p data-reveal style={{ transitionDelay: "160ms" }} className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">{t.subtitle}</p>
+          <div data-reveal style={{ transitionDelay: "240ms" }} className="relative inline-block">
+            <div className="absolute inset-0 rounded-full bg-white/25 blur-2xl animate-glow"></div>
+            <Link
+              href="/dashboard/playground"
+              className="relative inline-block px-8 py-3.5 bg-white text-black font-semibold rounded-full hover:bg-gray-100 hover:scale-[1.03] transition-all shadow-[0_0_40px_rgba(255,255,255,0.25)]"
+            >
+              ⚡ {t.cta}
+            </Link>
+          </div>
         </div>
 
         {/* How to earn */}
-        <h2 className="font-outfit text-2xl font-bold text-white mb-6">{t.earnTitle}</h2>
+        <h2 data-reveal className="font-outfit text-2xl font-bold text-white mb-6">{t.earnTitle}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
-          {t.earn.map((item) => (
-            <div key={item.title} className="glass-card rounded-2xl p-5 hover:-translate-y-0.5 transition-transform">
-              <div className="text-3xl mb-3">{item.icon}</div>
+          {t.earn.map((item, i) => (
+            <div
+              key={item.title}
+              data-reveal
+              style={{ transitionDelay: `${i * 80}ms` }}
+              className="group glass-card rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#D77757]/30"
+            >
+              <div className="text-3xl mb-3 transition-transform group-hover:scale-125 group-hover:-rotate-6">{item.icon}</div>
               <p className="font-semibold text-white mb-1">{item.title}</p>
               <p className="text-sm text-gray-400 leading-relaxed">{item.desc}</p>
             </div>
@@ -174,13 +217,13 @@ export default function RewardsContent() {
         </div>
 
         {/* Live leaderboard */}
-        <h2 className="font-outfit text-2xl font-bold text-white mb-1">
+        <h2 data-reveal className="font-outfit text-2xl font-bold text-white mb-1">
           📊 {th ? "อันดับเดือนนี้ (สด)" : "This Month's Standings (Live)"}
         </h2>
-        <p className="text-sm text-gray-500 mb-6">
-          {board ? `${th ? "รอบ" : "Period"} ${board.period} · ${th ? "กองรางวัลปัจจุบัน" : "current pool"} ${board.pool.toLocaleString()} ${th ? "เครดิต" : "credits"}` : " "}
+        <p data-reveal className="text-sm text-gray-500 mb-6">
+          {board ? `${th ? "รอบ" : "Period"} ${board.period} · ${th ? "กองรางวัลปัจจุบัน" : "current pool"} ${poolDisplay.toLocaleString()} ${th ? "เครดิต" : "credits"}` : " "}
         </p>
-        <div className="glass-card rounded-2xl p-5 sm:p-7 mb-16">
+        <div data-reveal className="glass-card rounded-2xl p-5 sm:p-7 mb-16">
           {boardState === "loading" && (
             <p className="text-sm text-gray-500 text-center py-6">{th ? "กำลังโหลดอันดับ..." : "Loading standings..."}</p>
           )}
@@ -237,21 +280,28 @@ export default function RewardsContent() {
         </div>
 
         {/* Monthly */}
-        <h2 className="font-outfit text-2xl font-bold text-white mb-1">{t.monthlyTitle}</h2>
-        <p className="text-sm text-gray-500 mb-6">{t.monthlySub}</p>
+        <h2 data-reveal className="font-outfit text-2xl font-bold text-white mb-1">{t.monthlyTitle}</h2>
+        <p data-reveal className="text-sm text-gray-500 mb-6">{t.monthlySub}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           {t.monthly.filter((m) => m.hot).map((item, i) => (
             <div
               key={item.rank}
-              className={`rounded-2xl p-6 text-center border ${
+              data-reveal
+              style={{ transitionDelay: `${i * 100}ms` }}
+              className={`relative overflow-hidden rounded-2xl p-6 text-center border transition-all duration-300 hover:-translate-y-1.5 ${
                 i === 0
-                  ? "bg-gradient-to-b from-[#D77757]/25 to-transparent border-[#D77757]/50 shadow-[0_0_40px_rgba(215,119,87,0.15)]"
-                  : "glass-card border-white/10"
+                  ? "bg-gradient-to-b from-[#D77757]/30 via-[#D77757]/10 to-transparent border-[#D77757]/60 shadow-[0_0_50px_rgba(215,119,87,0.22)] sm:scale-105 hover:shadow-[0_0_60px_rgba(215,119,87,0.35)]"
+                  : "glass-card border-white/10 hover:border-white/20"
               }`}
             >
-              <p className="text-sm text-gray-400 mb-2">{item.rank}</p>
-              <p className={`font-outfit text-2xl font-extrabold ${i === 0 ? "text-[#D77757]" : "text-white"}`}>{item.prize}</p>
-              <p className="text-xs text-gray-500 mt-2">{item.extra}</p>
+              {i === 0 && (
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shimmer"></div>
+                </div>
+              )}
+              <p className="relative text-sm text-gray-400 mb-2">{item.rank}</p>
+              <p className={`relative font-outfit text-2xl font-extrabold ${i === 0 ? "text-[#D77757]" : "text-white"}`}>{item.prize}</p>
+              <p className="relative text-xs text-gray-500 mt-2">{item.extra}</p>
             </div>
           ))}
         </div>
@@ -265,34 +315,48 @@ export default function RewardsContent() {
         </div>
 
         {/* Yearly */}
-        <h2 className="font-outfit text-2xl font-bold text-white mb-1">{t.yearlyTitle}</h2>
-        <p className="text-sm text-gray-500 mb-6">{t.yearlySub}</p>
-        <div className="rounded-3xl p-8 sm:p-10 text-center mb-4 bg-gradient-to-b from-yellow-500/20 via-[#D77757]/10 to-transparent border border-yellow-500/40 shadow-[0_0_60px_rgba(234,179,8,0.12)]">
-          <div className="text-5xl mb-3">🏆</div>
-          <p className="font-outfit text-xl font-bold text-yellow-300 mb-2">{t.champion.title}</p>
-          <p className="font-outfit text-4xl sm:text-5xl font-extrabold text-white">{t.champion.prize}</p>
-          <p className="text-sm text-gray-400 mt-3">{t.champion.extra}</p>
+        <h2 data-reveal className="font-outfit text-2xl font-bold text-white mb-1">{t.yearlyTitle}</h2>
+        <p data-reveal className="text-sm text-gray-500 mb-6">{t.yearlySub}</p>
+        <div data-reveal className="relative overflow-hidden rounded-3xl p-8 sm:p-10 text-center mb-4 bg-gradient-to-b from-yellow-500/20 via-[#D77757]/10 to-transparent border border-yellow-500/40 shadow-[0_0_60px_rgba(234,179,8,0.12)] transition-shadow duration-500 hover:shadow-[0_0_90px_rgba(234,179,8,0.28)]">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-yellow-200/20 to-transparent animate-shimmer"></div>
+          </div>
+          <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 bg-yellow-400/20 rounded-full blur-3xl animate-glow"></div>
+          <div className="relative text-6xl mb-3 inline-block animate-float">🏆</div>
+          <p className="relative font-outfit text-xl font-bold text-yellow-300 mb-2">{t.champion.title}</p>
+          <p className="relative font-outfit text-4xl sm:text-5xl font-extrabold text-white">{t.champion.prize}</p>
+          <p className="relative text-sm text-gray-400 mt-3">{t.champion.extra}</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {t.yearly.map((item) => (
-            <div key={item.rank} className="glass-card rounded-2xl px-6 py-4 flex items-center justify-between">
+          {t.yearly.map((item, i) => (
+            <div
+              key={item.rank}
+              data-reveal
+              style={{ transitionDelay: `${i * 70}ms` }}
+              className="glass-card rounded-2xl px-6 py-4 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:border-white/20"
+            >
               <p className="text-sm text-gray-300">{item.rank}</p>
               <p className="font-semibold text-white text-right">{item.prize}</p>
             </div>
           ))}
         </div>
-        <p className="text-sm font-semibold text-white mb-4">{t.specialTitle}</p>
+        <p data-reveal className="text-sm font-semibold text-white mb-4">{t.specialTitle}</p>
         <div className="flex flex-wrap gap-2 mb-16">
-          {t.special.map((badge) => (
-            <span key={badge} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-gray-300">
+          {t.special.map((badge, i) => (
+            <span
+              key={badge}
+              data-reveal
+              style={{ transitionDelay: `${i * 45}ms` }}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-gray-300 transition-all hover:border-[#D77757]/40 hover:bg-[#D77757]/10 hover:text-white"
+            >
               {badge}
             </span>
           ))}
         </div>
 
         {/* Rules */}
-        <h2 className="font-outfit text-2xl font-bold text-white mb-6">📋 {t.rulesTitle}</h2>
-        <div className="glass-card rounded-2xl p-6 sm:p-8 mb-12">
+        <h2 data-reveal className="font-outfit text-2xl font-bold text-white mb-6">📋 {t.rulesTitle}</h2>
+        <div data-reveal className="glass-card rounded-2xl p-6 sm:p-8 mb-12">
           <ol className="space-y-3">
             {t.rules.map((rule, i) => (
               <li key={i} className="flex gap-3 text-sm sm:text-base text-gray-300 leading-relaxed">
@@ -305,14 +369,17 @@ export default function RewardsContent() {
           </ol>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mb-8">{t.footnote}</p>
-        <div className="text-center">
-          <Link
-            href="/dashboard/playground"
-            className="inline-block px-8 py-3.5 bg-gradient-to-r from-[#D77757] to-[#c4552f] text-white font-semibold rounded-full hover:opacity-90 transition-all shadow-[0_4px_30px_rgba(215,119,87,0.35)]"
-          >
-            🚀 {t.cta}
-          </Link>
+        <p data-reveal className="text-center text-sm text-gray-500 mb-8">{t.footnote}</p>
+        <div data-reveal className="text-center">
+          <div className="relative inline-block">
+            <div className="absolute inset-0 rounded-full bg-[#D77757]/40 blur-2xl animate-glow"></div>
+            <Link
+              href="/dashboard/playground"
+              className="relative inline-block px-8 py-3.5 bg-gradient-to-r from-[#D77757] to-[#c4552f] text-white font-semibold rounded-full hover:opacity-90 hover:scale-[1.03] transition-all shadow-[0_4px_30px_rgba(215,119,87,0.35)]"
+            >
+              🚀 {t.cta}
+            </Link>
+          </div>
         </div>
       </main>
     </div>

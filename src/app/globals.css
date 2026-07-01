@@ -27,6 +27,38 @@
   .animation-delay-2000 {
     animation-delay: 2s;
   }
+
+  /* Scroll reveal — elements fade/slide in as they enter the viewport */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  [data-reveal].reveal-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Animated drifting gradient text — pair with .text-gradient */
+  .animate-gradient-text {
+    background-size: 220% auto;
+    animation: gradientText 5s ease infinite;
+  }
+}
+
+@keyframes gradientText {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 ::selection {

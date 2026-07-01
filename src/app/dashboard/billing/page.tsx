@@ -125,14 +125,18 @@ function BillingPageContent() {
     <div className="min-h-screen pt-24 pb-12 relative overflow-hidden">
       <Navbar />
       
-      {/* Background blurs */}
-      <div className="absolute top-1/4 -right-32 w-96 h-96 bg-[#D77757] rounded-full mix-blend-screen filter blur-[128px] opacity-10"></div>
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-[#D77757]/20 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#9333EA]/10 rounded-full blur-[140px]"></div>
 
       <main className="max-w-4xl mx-auto px-6 w-full relative z-10 animate-fade-in">
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex items-end justify-between mb-10 gap-4">
           <div>
-            <h1 className="text-3xl font-outfit font-bold tracking-tight text-white">{t.billing.title}</h1>
-            <p className="text-sm text-gray-400 mt-1.5">{t.billing.subtitle}</p>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#D77757]/10 border border-[#D77757]/20 text-[#D77757] mb-3">
+              💳 {th ? "เครดิต & แพ็กเกจ" : "Credits & Billing"}
+            </span>
+            <h1 className="font-outfit text-4xl sm:text-5xl font-bold tracking-tight text-gradient">{t.billing.title}</h1>
+            <p className="text-sm text-gray-400 mt-2">{t.billing.subtitle}</p>
           </div>
           <button onClick={() => router.push("/dashboard")} className="text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">
             &larr; {t.common.backToDashboard}
