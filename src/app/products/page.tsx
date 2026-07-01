@@ -22,6 +22,9 @@ const TIER_LABEL: Record<Tier, string> = {
   enterprise: "Enterprise",
 };
 
+// Static landing site (Netlify) — per-app detail pages live at /<id>.html
+const LANDING_BASE = "https://rnai-io.netlify.app";
+
 export default function ProductsPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [ready, setReady] = useState(false);
@@ -48,19 +51,36 @@ export default function ProductsPage() {
     return unsub;
   }, []);
 
+  // Scroll-reveal: fade/slide cards in as they enter the viewport
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("reveal-in");
+            io.unobserve(e.target);
+          }
+        }),
+      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-20">
         {/* Header */}
         <div className="text-center mb-12">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#D77757]/10 text-[#D77757] border border-[#D77757]/20 mb-4">
+          <span data-reveal className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#D77757]/10 text-[#D77757] border border-[#D77757]/20 mb-4">
             {th ? "ศูนย์รวมแอป" : "App Hub"}
           </span>
-          <h1 className="font-outfit text-4xl sm:text-5xl font-bold tracking-tight text-gradient">
+          <h1 data-reveal style={{ transitionDelay: "70ms" }} className="font-outfit text-4xl sm:text-5xl font-bold tracking-tight text-gradient animate-gradient-text">
             {th ? "ดาวน์โหลดผลงานของเรา" : "Download our apps"}
           </h1>
-          <p className="mt-4 text-gray-400 max-w-xl mx-auto">
+          <p data-reveal style={{ transitionDelay: "140ms" }} className="mt-4 text-gray-400 max-w-xl mx-auto">
             {th
               ? "ปลดล็อกดาวน์โหลดตามระดับสมาชิก — Starter · Pro · Enterprise"
               : "Downloads unlock by membership tier — Starter · Pro · Enterprise."}
@@ -83,7 +103,7 @@ export default function ProductsPage() {
 
         {/* Grid */}
         <div className="grid gap-5 sm:grid-cols-2">
-          {PRODUCTS.map((p) => {
+          {PRODUCTS.map((p, i) => {
             const platforms = Object.keys(p.downloads).filter(
               (k) => p.downloads[k as Platform]
             ) as Platform[];
@@ -92,7 +112,9 @@ export default function ProductsPage() {
             return (
               <div
                 key={p.id}
-                className="glass-card rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1"
+                data-reveal
+                style={{ transitionDelay: `${i * 70}ms` }}
+                className="glass-card rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:border-white/20"
               >
                 <div className="flex items-start gap-4">
                   <div
@@ -171,6 +193,14 @@ export default function ProductsPage() {
                       🔒 {th ? `สมัคร ${TIER_LABEL[p.tier]} เพื่อปลดล็อก` : `Upgrade to ${TIER_LABEL[p.tier]} to unlock`}
                     </Link>
                   )}
+                  <a
+                    href={`${LANDING_BASE}/${p.id}.html`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 border border-white/10 hover:border-[#D77757]/50 hover:text-white hover:bg-white/[0.04] transition-all"
+                  >
+                    {th ? "รายละเอียด" : "Details"} →
+                  </a>
                 </div>
               </div>
             );
