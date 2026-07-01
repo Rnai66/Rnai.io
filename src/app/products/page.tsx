@@ -201,6 +201,17 @@ export default function ProductsPage() {
                   >
                     {th ? "รายละเอียด" : "Details"} →
                   </a>
+                  {p.webApp && (
+                    <a
+                      href={p.webApp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                      style={{ backgroundColor: `${p.color}26`, border: `1px solid ${p.color}66` }}
+                    >
+                      🌐 {th ? "เว็บแอป" : "Web app"}
+                    </a>
+                  )}
                 </div>
               </div>
             );

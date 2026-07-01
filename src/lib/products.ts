@@ -57,6 +57,7 @@ export interface Product {
   color: string;       // accent hex
   downloads: Partial<Record<Platform, string>>; // direct installer URLs (gated)
   store?: Partial<Record<Platform, string>>;     // public store links (optional)
+  webApp?: string;                                // public web-app URL (ungated, opens directly)
 }
 
 export const PRODUCTS: Product[] = [
@@ -83,6 +84,7 @@ export const PRODUCTS: Product[] = [
     icon: "🚚",
     color: "#0EA5E9",
     downloads: { android: "https://github.com/Rnai-io/H2Hfleet/releases/latest" },
+    webApp: "https://h2hfleet.netlify.app/",
   },
   {
     id: "moneyma",
@@ -90,11 +92,12 @@ export const PRODUCTS: Product[] = [
     tagline: "Personal finance, simplified",
     taglineTh: "จัดการการเงินส่วนตัวให้ง่ายขึ้น",
     version: "1.4.1",
-    platforms: ["android"],
+    platforms: ["android", "web"],
     tier: "enterprise",
     icon: "💰",
     color: "#10B981",
     downloads: { android: "https://github.com/Rnai66/Moneyma/releases/latest" },
+    webApp: "https://moneyma-app.netlify.app/",
   },
   {
     id: "quom",
