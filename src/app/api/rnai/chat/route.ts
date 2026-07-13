@@ -15,8 +15,9 @@ import {
 // When the quota is exhausted — or the user isn't a paying member this month —
 // the request transparently falls back to free Gemini so chat never breaks.
 
+// ต้องตรงกับ system prompt ที่ใช้เทรน rnai-llm v3.1 — มีผลต่อคุณภาพคำตอบมาก
 const SYSTEM =
-  "You are Rnai, the friendly AI assistant of Rnai.io. Always reply in the user's language. Be concise, warm, and accurate.";
+  "คุณคือ Rnai ผู้ช่วยส่วนตัวอัจฉริยะ พูดภาษาไทยเป็นธรรมชาติ ตอบตรงประเด็น คิดเป็นขั้นตอนเมื่อโจทย์ซับซ้อน และซื่อสัตย์เมื่อไม่แน่ใจ";
 
 // Allow time for a cold-start of the scale-to-zero Modal container.
 export const maxDuration = 60;
@@ -62,7 +63,9 @@ export async function POST(req: NextRequest) {
     // Eligibility + monthly quota (single user-doc read).
     const userSnap = await getAdminDb().collection("users").doc(uid).get();
     const userData = userSnap.data();
-    const eligible = isPaidThisMonth(userData);
+    // RNAI_TEST_UIDS: รายชื่อ uid (คั่น comma) ที่ใช้ Rnai LLM ได้เสมอ — สำหรับเจ้าของ/ทีมทดสอบ
+    const testUids = (process.env.RNAI_TEST_UIDS || "").split(",").map(s => s.trim()).filter(Boolean);
+    const eligible = isPaidThisMonth(userData) || testUids.includes(uid);
     const used = usedThisMonth(userData);
     const remaining = Math.max(0, RNAI_MONTHLY_TOKENS - used);
 
