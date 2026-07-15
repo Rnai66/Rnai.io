@@ -74,8 +74,12 @@ export async function POST(req: NextRequest) {
 
     if (canUseRnai) {
       try {
+        // ตัดการรอ Rnai LLM ที่ 45 วิ (กัน Vercel FUNCTION_INVOCATION_TIMEOUT ที่ 60 วิ)
+        // — เหลือเวลา ~15 วิ ให้ fallback Gemini ตอบทัน ข้อความแรกหลังโมเดลหลับจะได้
+        // Gemini + request นี้ปลุก Modal ให้ตื่น ข้อความถัดไปจะได้ Rnai LLM ตามปกติ
         const res = await fetch(`${base!.replace(/\/+$/, "")}/v1/chat/completions`, {
           method: "POST",
+          signal: AbortSignal.timeout(45_000),
           headers: {
             "Content-Type": "application/json",
             ...(process.env.SELF_API_KEY ? { Authorization: `Bearer ${process.env.SELF_API_KEY}` } : {}),
