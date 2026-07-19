@@ -1,48 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="400" height="100">
+  <!-- Rnai wordmark: mark + brand name -->
   <defs>
-    <style>
-      .primary-color { fill: #D77757; }
-      .secondary-color { fill: #5769F7; }
-      .text-color { fill: #050505; }
-      .text-large { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; font-size: 48px; font-weight: 500; }
-      .text-dot { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; font-size: 32px; fill: #D77757; }
-    </style>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#11505F"/>
+      <stop offset="1" stop-color="#0B3945"/>
+    </linearGradient>
   </defs>
-
-  <!-- Icon -->
   <g>
-    <!-- Outer circle ring -->
-    <circle cx="35" cy="50" r="33" fill="none" stroke="#D77757" stroke-width="2"/>
-
-    <!-- Inner background -->
-    <circle cx="35" cy="50" r="27" fill="#D77757" opacity="0.08"/>
-
-    <!-- Center node -->
-    <circle cx="35" cy="50" r="4.5" class="primary-color"/>
-
-    <!-- Surrounding nodes -->
-    <circle cx="35" cy="23" r="2.8" class="secondary-color" opacity="0.8"/>
-    <circle cx="35" cy="77" r="2.8" class="secondary-color" opacity="0.8"/>
-    <circle cx="8" cy="50" r="2.8" class="secondary-color" opacity="0.8"/>
-    <circle cx="62" cy="50" r="2.8" class="secondary-color" opacity="0.8"/>
-
-    <!-- Diagonal nodes -->
-    <circle cx="52" cy="32" r="2.8" class="secondary-color" opacity="0.6"/>
-    <circle cx="52" cy="68" r="2.8" class="secondary-color" opacity="0.6"/>
-    <circle cx="18" cy="32" r="2.8" class="secondary-color" opacity="0.6"/>
-    <circle cx="18" cy="68" r="2.8" class="secondary-color" opacity="0.6"/>
-
-    <!-- Connection lines -->
-    <line x1="35" y1="23" x2="35" y2="37" stroke="#D77757" stroke-width="1" opacity="0.6"/>
-    <line x1="35" y1="63" x2="35" y2="77" stroke="#D77757" stroke-width="1" opacity="0.6"/>
-    <line x1="8" y1="50" x2="22" y2="50" stroke="#D77757" stroke-width="1" opacity="0.6"/>
-    <line x1="48" y1="50" x2="62" y2="50" stroke="#D77757" stroke-width="1" opacity="0.6"/>
-    <line x1="18" y1="32" x2="28" y2="42" stroke="#D77757" stroke-width="1" opacity="0.5"/>
-    <line x1="42" y1="58" x2="52" y2="68" stroke="#D77757" stroke-width="1" opacity="0.5"/>
+    <rect x="8" y="10" width="80" height="80" rx="18" fill="url(#bg)"/>
+    <path d="M 37 40 L 37 66" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M 37 57 Q 37 40 54 40" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <circle cx="66" cy="40" r="5.5" fill="#D77757"/>
   </g>
-
-  <!-- Wordmark -->
-  <text x="95" y="70" class="text-large text-color">Rnai</text>
-  <text x="243" y="62" class="text-dot">.</text>
-  <text x="260" y="70" class="text-large text-color">io</text>
+  <text x="106" y="72" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+        font-size="52" font-weight="700" letter-spacing="-1.5" fill="#171717">Rnai</text>
+  <circle cx="222" cy="68" r="5.5" fill="#D77757"/>
+  <text x="234" y="72" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+        font-size="52" font-weight="400" letter-spacing="-1" fill="#737373">io</text>
 </svg>

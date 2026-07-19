@@ -1,31 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- Monochrome Blue version of Rnai.io icon -->
-  <!-- Outer circle ring -->
-  <circle cx="128" cy="128" r="116" fill="none" stroke="#5769F7" stroke-width="4"/>
-
-  <!-- Inner background -->
-  <circle cx="128" cy="128" r="96" fill="#5769F7" opacity="0.08"/>
-
-  <!-- Center node -->
-  <circle cx="128" cy="128" r="16" fill="#5769F7"/>
-
-  <!-- Surrounding nodes - all in monochrome blue -->
-  <circle cx="128" cy="50" r="10" fill="#5769F7" opacity="0.7"/>
-  <circle cx="128" cy="206" r="10" fill="#5769F7" opacity="0.7"/>
-  <circle cx="50" cy="128" r="10" fill="#5769F7" opacity="0.7"/>
-  <circle cx="206" cy="128" r="10" fill="#5769F7" opacity="0.7"/>
-
-  <!-- Diagonal nodes -->
-  <circle cx="164" cy="76" r="10" fill="#5769F7" opacity="0.5"/>
-  <circle cx="164" cy="180" r="10" fill="#5769F7" opacity="0.5"/>
-  <circle cx="92" cy="76" r="10" fill="#5769F7" opacity="0.5"/>
-  <circle cx="92" cy="180" r="10" fill="#5769F7" opacity="0.5"/>
-
-  <!-- Connection lines -->
-  <line x1="128" y1="50" x2="128" y2="104" stroke="#5769F7" stroke-width="3" opacity="0.6"/>
-  <line x1="128" y1="152" x2="128" y2="206" stroke="#5769F7" stroke-width="3" opacity="0.6"/>
-  <line x1="50" y1="128" x2="104" y2="128" stroke="#5769F7" stroke-width="3" opacity="0.6"/>
-  <line x1="152" y1="128" x2="206" y2="128" stroke="#5769F7" stroke-width="3" opacity="0.6"/>
-  <line x1="92" y1="76" x2="104" y2="104" stroke="#5769F7" stroke-width="3" opacity="0.5"/>
-  <line x1="152" y1="152" x2="164" y2="180" stroke="#5769F7" stroke-width="3" opacity="0.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Monochrome teal version of Rnai icon -->
+  <path d="M 196 196 L 196 356" stroke="#0B3945" stroke-width="62" stroke-linecap="round" fill="none"/>
+  <path d="M 196 300 Q 196 196 306 196" stroke="#0B3945" stroke-width="62" stroke-linecap="round" fill="none"/>
+  <circle cx="382" cy="196" r="34" fill="#0B3945"/>
 </svg>

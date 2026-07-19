@@ -1,3 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <text y=".9em" font-size="90">🤖</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="116" fill="#0B3945"/>
+  <path d="M 196 196 L 196 356" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round" fill="none"/>
+  <path d="M 196 300 Q 196 196 306 196" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round" fill="none"/>
+  <circle cx="382" cy="196" r="34" fill="#D77757"/>
 </svg>
