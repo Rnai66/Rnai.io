@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Outfit, Sarabun } from "next/font/google";
+import { Inter, Outfit, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
-// ฟอนต์ไทยกลางของ ecosystem = Sarabun (ตรงกับ CLI/mobile ตาม Rnai Design System)
-const notoThai = Sarabun({
+// ฟอนต์ไทยกลางของ ecosystem = Noto Sans Thai (มาตรฐาน Rnai Design System v1.1)
+// — glyph กระชับ พอดีกับ layout, เข้ากับ Inter; Sarabun ตัวใหญ่เกินทำให้ข้อความล้นกล่อง
+const notoThai = Noto_Sans_Thai({
   subsets: ["thai", "latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-thai",
