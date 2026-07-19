@@ -75,7 +75,7 @@ export default function DashboardPage() {
 
       {/* Ambient background */}
       <div className="pointer-events-none absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-[#D77757]/20 rounded-full blur-[140px]"></div>
-      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#9333EA]/10 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#0B3945]/12 rounded-full blur-[140px]"></div>
 
       <main className="max-w-5xl mx-auto px-5 sm:px-6 w-full relative z-10 animate-fade-in">
         {/* ── Hero ── */}
@@ -141,7 +141,7 @@ export default function DashboardPage() {
 
         {/* ── Upgrade banner (free / low credits) ── */}
         {(!isPaid || lowCredits) && (
-          <section className="mb-10 relative overflow-hidden rounded-3xl p-6 sm:p-7 bg-gradient-to-r from-[#9333EA]/25 via-[#D77757]/20 to-[#D77757]/10 border border-white/10">
+          <section className="mb-10 relative overflow-hidden rounded-3xl p-6 sm:p-7 bg-gradient-to-r from-[#0B3945]/25 via-[#D77757]/20 to-[#D77757]/10 border border-white/10">
             <div className="absolute -bottom-12 -right-6 w-48 h-48 bg-[#D77757]/25 rounded-full blur-3xl"></div>
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
         <section className="mb-2">
           <button
             onClick={() => go("/rewards")}
-            className="group relative w-full overflow-hidden rounded-3xl p-6 sm:p-8 text-left border border-yellow-500/25 bg-gradient-to-br from-yellow-500/15 via-[#D77757]/15 to-[#9333EA]/10 transition-all duration-300 hover:-translate-y-1 hover:border-yellow-500/40"
+            className="group relative w-full overflow-hidden rounded-3xl p-6 sm:p-8 text-left border border-yellow-500/25 bg-gradient-to-br from-yellow-500/15 via-[#D77757]/15 to-[#0B3945]/12 transition-all duration-300 hover:-translate-y-1 hover:border-yellow-500/40"
           >
             <div className="pointer-events-none absolute -top-10 -right-6 w-52 h-52 bg-yellow-500/20 rounded-full blur-3xl"></div>
             <div className="pointer-events-none absolute -bottom-16 left-1/4 w-52 h-52 bg-[#D77757]/20 rounded-full blur-3xl"></div>

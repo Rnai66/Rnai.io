@@ -420,7 +420,7 @@ export default function PlaygroundPage() {
     <div className="min-h-screen pt-24 pb-12 relative overflow-hidden">
       <Navbar />
       <div className="pointer-events-none absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-[#D77757]/20 rounded-full blur-[140px]"></div>
-      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#9333EA]/10 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#0B3945]/12 rounded-full blur-[140px]"></div>
 
       <main className="max-w-6xl mx-auto px-6 w-full relative z-10 animate-fade-in">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">

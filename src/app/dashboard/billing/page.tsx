@@ -127,7 +127,7 @@ function BillingPageContent() {
       
       {/* Ambient background */}
       <div className="pointer-events-none absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-[#D77757]/20 rounded-full blur-[140px]"></div>
-      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#9333EA]/10 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-[#0B3945]/12 rounded-full blur-[140px]"></div>
 
       <main className="max-w-4xl mx-auto px-6 w-full relative z-10 animate-fade-in">
         <div className="flex items-end justify-between mb-10 gap-4">
