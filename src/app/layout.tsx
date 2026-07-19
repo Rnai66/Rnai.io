@@ -14,7 +14,7 @@ const notoThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Rnai.io — The Ultimate AI Gateway",
+  title: "Rnai — The Ultimate AI Gateway",
   description: "Generate, edit, translate, and extract using the world's best AI models with one simple API.",
   icons: {
     icon: "/icon.svg",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Rnai.io",
+    title: "Rnai",
   },
 };
 

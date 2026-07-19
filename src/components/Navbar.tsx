@@ -74,7 +74,7 @@ export default function Navbar() {
               <path d="M 196 300 Q 196 196 306 196" stroke="#FFFFFF" strokeWidth="62" strokeLinecap="round" fill="none" />
               <circle cx="382" cy="196" r="34" fill="#D77757" />
             </svg>
-            Rnai<span className="text-[#D77757]">.io</span>
+            Rnai
           </Link>
 
           {/* Desktop links */}

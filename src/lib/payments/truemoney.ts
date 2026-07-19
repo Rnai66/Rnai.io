@@ -2,7 +2,7 @@
 //
 // Redeems a TrueMoney gift voucher INTO the business wallet phone number
 // configured via TRUEMONEY_PHONE, then returns the redeemed amount so the
-// caller can credit the user's Rnai.io balance.
+// caller can credit the user's Rnai balance.
 //
 // Note: TrueMoney has no official public API for this; this uses the same
 // endpoint the gift.truemoney.com web page calls. TrueMoney itself prevents

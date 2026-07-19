@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Rnai.io - ${pack.credits.toLocaleString()} Credits`,
+              name: `Rnai - ${pack.credits.toLocaleString()} Credits`,
               description: "Pay-as-you-go AI credits",
             },
             unit_amount: pack.price,

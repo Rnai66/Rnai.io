@@ -27,7 +27,7 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
       title: "Privacy Policy",
       updated: "Last updated: June 12, 2026",
       intro:
-        "Rnai.io (“we”, “our”) provides an AI generation platform via our website and mobile application. This policy explains what we collect and how we use it.",
+        "Rnai (“we”, “our”) provides an AI generation platform via our website and mobile application. This policy explains what we collect and how we use it.",
       sections: [
         {
           title: "1. Information we collect",
@@ -43,7 +43,7 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
         },
         {
           title: "4. Data stored on your device",
-          body: "The Rnai.io mobile app stores your API key and session token securely in the device keychain, and your creation library locally on your device. Deleting the app removes this local data.",
+          body: "The Rnai mobile app stores your API key and session token securely in the device keychain, and your creation library locally on your device. Deleting the app removes this local data.",
         },
         {
           title: "5. Account deletion",
@@ -59,7 +59,7 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
       title: "นโยบายความเป็นส่วนตัว",
       updated: "อัปเดตล่าสุด: 12 มิถุนายน 2026",
       intro:
-        "Rnai.io (“เรา”) ให้บริการแพลตฟอร์มสร้างสรรค์ผลงานด้วย AI ผ่านเว็บไซต์และแอปพลิเคชันมือถือ นโยบายฉบับนี้อธิบายว่าเราเก็บข้อมูลอะไรบ้างและนำไปใช้อย่างไร",
+        "Rnai (“เรา”) ให้บริการแพลตฟอร์มสร้างสรรค์ผลงานด้วย AI ผ่านเว็บไซต์และแอปพลิเคชันมือถือ นโยบายฉบับนี้อธิบายว่าเราเก็บข้อมูลอะไรบ้างและนำไปใช้อย่างไร",
       sections: [
         {
           title: "1. ข้อมูลที่เราเก็บรวบรวม",
@@ -75,7 +75,7 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
         },
         {
           title: "4. ข้อมูลที่จัดเก็บบนอุปกรณ์ของคุณ",
-          body: "แอปมือถือ Rnai.io จัดเก็บ API key และโทเค็นการเข้าสู่ระบบไว้อย่างปลอดภัยใน Keychain ของอุปกรณ์ และจัดเก็บคลังผลงานของคุณไว้ในเครื่องเท่านั้น การลบแอปจะเป็นการลบข้อมูลเหล่านี้ออกจากอุปกรณ์",
+          body: "แอปมือถือ Rnai จัดเก็บ API key และโทเค็นการเข้าสู่ระบบไว้อย่างปลอดภัยใน Keychain ของอุปกรณ์ และจัดเก็บคลังผลงานของคุณไว้ในเครื่องเท่านั้น การลบแอปจะเป็นการลบข้อมูลเหล่านี้ออกจากอุปกรณ์",
         },
         {
           title: "5. การลบบัญชี",
@@ -93,11 +93,11 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
       title: "Terms of Service",
       updated: "Last updated: June 12, 2026",
       intro:
-        "By using Rnai.io (the website at rnai-io.vercel.app and the Rnai.io mobile application), you agree to these terms.",
+        "By using Rnai (the website at rnai-io.vercel.app and the Rnai mobile application), you agree to these terms.",
       sections: [
         {
           title: "1. The service",
-          body: "Rnai.io provides AI-powered generation tools (text, images, websites, audio) through a unified API, the website, and the Rnai.io mobile app. Features may change as the platform evolves. The service is provided “as is” without warranties of any kind.",
+          body: "Rnai provides AI-powered generation tools (text, images, websites, audio) through a unified API, the website, and the Rnai mobile app. Features may change as the platform evolves. The service is provided “as is” without warranties of any kind.",
         },
         {
           title: "2. Accounts and credits",
@@ -113,7 +113,7 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
         },
         {
           title: "5. Limitation of liability",
-          body: "To the maximum extent permitted by law, Rnai.io shall not be liable for indirect, incidental, or consequential damages arising from use of the service. Our total liability is limited to the amount you paid in the 12 months preceding the claim.",
+          body: "To the maximum extent permitted by law, Rnai shall not be liable for indirect, incidental, or consequential damages arising from use of the service. Our total liability is limited to the amount you paid in the 12 months preceding the claim.",
         },
         {
           title: "6. Changes",
@@ -129,11 +129,11 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
       title: "ข้อกำหนดการใช้งาน",
       updated: "อัปเดตล่าสุด: 12 มิถุนายน 2026",
       intro:
-        "การใช้งาน Rnai.io (เว็บไซต์ rnai-io.vercel.app และแอปพลิเคชันมือถือ Rnai.io) ถือว่าคุณยอมรับข้อกำหนดเหล่านี้",
+        "การใช้งาน Rnai (เว็บไซต์ rnai-io.vercel.app และแอปพลิเคชันมือถือ Rnai) ถือว่าคุณยอมรับข้อกำหนดเหล่านี้",
       sections: [
         {
           title: "1. บริการของเรา",
-          body: "Rnai.io ให้บริการเครื่องมือสร้างสรรค์ผลงานด้วย AI (ข้อความ รูปภาพ เว็บไซต์ เสียง) ผ่าน API กลาง เว็บไซต์ และแอปมือถือ Rnai.io ฟีเจอร์อาจเปลี่ยนแปลงได้ตามการพัฒนาแพลตฟอร์ม บริการนี้ให้บริการ “ตามสภาพ” โดยไม่มีการรับประกันใดๆ",
+          body: "Rnai ให้บริการเครื่องมือสร้างสรรค์ผลงานด้วย AI (ข้อความ รูปภาพ เว็บไซต์ เสียง) ผ่าน API กลาง เว็บไซต์ และแอปมือถือ Rnai ฟีเจอร์อาจเปลี่ยนแปลงได้ตามการพัฒนาแพลตฟอร์ม บริการนี้ให้บริการ “ตามสภาพ” โดยไม่มีการรับประกันใดๆ",
         },
         {
           title: "2. บัญชีและเครดิต",
@@ -149,7 +149,7 @@ const CONTENT: Record<LegalDoc, Record<"en" | "th", LegalContent>> = {
         },
         {
           title: "5. ข้อจำกัดความรับผิด",
-          body: "ภายใต้ขอบเขตสูงสุดที่กฎหมายอนุญาต Rnai.io จะไม่รับผิดต่อความเสียหายทางอ้อม ความเสียหายต่อเนื่อง หรือความเสียหายพิเศษใดๆ ที่เกิดจากการใช้บริการ โดยความรับผิดรวมของเราจำกัดไม่เกินจำนวนเงินที่คุณชำระในช่วง 12 เดือนก่อนเกิดข้อเรียกร้อง",
+          body: "ภายใต้ขอบเขตสูงสุดที่กฎหมายอนุญาต Rnai จะไม่รับผิดต่อความเสียหายทางอ้อม ความเสียหายต่อเนื่อง หรือความเสียหายพิเศษใดๆ ที่เกิดจากการใช้บริการ โดยความรับผิดรวมของเราจำกัดไม่เกินจำนวนเงินที่คุณชำระในช่วง 12 เดือนก่อนเกิดข้อเรียกร้อง",
         },
         {
           title: "6. การเปลี่ยนแปลงข้อกำหนด",
@@ -178,7 +178,7 @@ export default function LegalPage({ doc }: { doc: LegalDoc }) {
       <main className="mx-auto max-w-3xl px-4 sm:px-6 py-14 sm:py-20 relative z-10">
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-            ← Rnai.io
+            ← Rnai
           </Link>
 
           {/* TH/EN toggle */}

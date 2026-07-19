@@ -50,7 +50,7 @@ const T = {
       "ประกาศผลภายใน 7 วันหลังจบรอบ เครดิตเข้ากระเป๋าอัตโนมัติ",
       "มูลค่ารางวัลอาจปรับตามสัดส่วนยอดใช้งานรวมของรอบ (ประกาศล่วงหน้า ≥ 15 วัน)",
     ],
-    footnote: "เริ่มนับคะแนนอัตโนมัติทันทีที่คุณสร้างผลงาน — ดูคะแนนของคุณได้ที่แท็บกระเป๋าในแอป Rnai.io",
+    footnote: "เริ่มนับคะแนนอัตโนมัติทันทีที่คุณสร้างผลงาน — ดูคะแนนของคุณได้ที่แท็บกระเป๋าในแอป Rnai",
   },
   en: {
     badge: "Rewards Program",
@@ -93,7 +93,7 @@ const T = {
       "Winners announced within 7 days; credits land in your wallet automatically",
       "Prize values may scale with the period's total usage (announced ≥ 15 days ahead)",
     ],
-    footnote: "Points start counting automatically the moment you create — check yours in the Wallet tab of the Rnai.io app",
+    footnote: "Points start counting automatically the moment you create — check yours in the Wallet tab of the Rnai app",
   },
 };
 
@@ -159,7 +159,7 @@ export default function RewardsContent() {
         {/* Top bar */}
         <div className="flex items-center justify-between mb-10">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-            ← Rnai.io
+            ← Rnai
           </Link>
           <div className="flex gap-1 rounded-full bg-white/[0.05] border border-white/10 p-1">
             {(["th", "en"] as const).map((lang) => (

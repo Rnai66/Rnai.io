@@ -1,4 +1,4 @@
-// Rnai.io — Product catalog for the Downloads hub.
+// Rnai — Product catalog for the Downloads hub.
 //
 // Each product's installer is downloaded via /api/downloads/[id]?platform=...
 // which checks the user is signed in (tier "free" = any member) before
@@ -65,7 +65,7 @@ export interface Product {
 export const PRODUCTS: Product[] = [
   {
     id: "rnai-mobile",
-    name: "Rnai.io Mobile",
+    name: "Rnai Mobile",
     tagline: "Create anything with AI — 18 skills, 15 languages",
     taglineTh: "สร้างสรรค์ทุกอย่างด้วย AI — 18 สกิล 15 ภาษา",
     version: "2.0.0",

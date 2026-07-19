@@ -45,7 +45,7 @@ type SkillConfig = {
   needsWebsiteImage?: boolean;
 };
 
-// Emoji icons — same visual language as the Rnai.io mobile app
+// Emoji icons — same visual language as the Rnai mobile app
 const SKILL_ICONS: Record<SkillId, string> = {
   "image/generate": "🎨",
   "image/remove-background": "✂️",

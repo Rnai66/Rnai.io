@@ -302,7 +302,7 @@ export const translations = {
 
     // Landing page / Home
     home: {
-      title: "Rnai.io — The Ultimate AI Gateway",
+      title: "Rnai — The Ultimate AI Gateway",
       subtitle: "Generate, edit, translate, and extract using the world's best AI models",
       cta: "Get Started",
       loginLink: "Log in",
@@ -610,7 +610,7 @@ export const translations = {
 
     // Landing page / Home
     home: {
-      title: "Rnai.io — ประตูทางเข้า AI ชั้นยอด",
+      title: "Rnai — ประตูทางเข้า AI ชั้นยอด",
       subtitle: "สร้าง แก้ไข แปล และสกัด โดยใช้ AI โมเดลดีที่สุดในโลก",
       cta: "เริ่มต้นใช้งาน",
       loginLink: "เข้าสู่ระบบ",

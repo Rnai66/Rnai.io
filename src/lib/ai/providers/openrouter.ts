@@ -16,7 +16,7 @@ export const OpenRouterProvider: Provider = {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "X-Title": "Rnai.io Platform",
+        "X-Title": "Rnai Platform",
       },
       body: JSON.stringify({
         model: "openai/gpt-4o-mini",
