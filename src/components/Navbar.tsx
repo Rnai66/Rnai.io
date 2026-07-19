@@ -56,9 +56,24 @@ export default function Navbar() {
             href="/"
             className="font-outfit font-bold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2 group shrink-0"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D77757] to-[#8a4b35] flex items-center justify-center shadow-lg shadow-[#D77757]/20 group-hover:scale-105 transition-transform">
-              <span className="text-white text-sm font-black">R</span>
-            </div>
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 512 512"
+              className="shrink-0 shadow-lg shadow-[#D77757]/20 rounded-lg group-hover:scale-105 transition-transform"
+              aria-label="Rnai logo"
+            >
+              <defs>
+                <linearGradient id="rnaiNavBg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#155E70" />
+                  <stop offset="1" stopColor="#0B3945" />
+                </linearGradient>
+              </defs>
+              <rect width="512" height="512" rx="116" fill="url(#rnaiNavBg)" />
+              <path d="M 196 196 L 196 356" stroke="#FFFFFF" strokeWidth="62" strokeLinecap="round" fill="none" />
+              <path d="M 196 300 Q 196 196 306 196" stroke="#FFFFFF" strokeWidth="62" strokeLinecap="round" fill="none" />
+              <circle cx="382" cy="196" r="34" fill="#D77757" />
+            </svg>
             Rnai<span className="text-[#D77757]">.io</span>
           </Link>
 
