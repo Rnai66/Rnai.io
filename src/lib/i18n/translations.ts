@@ -251,6 +251,7 @@ export const translations = {
       login: "Log in",
       signup: "Sign up",
       email: "Email",
+      emailAddress: "Email Address",
       password: "Password",
       confirmPassword: "Confirm Password",
       rememberMe: "Remember me",
@@ -269,6 +270,25 @@ export const translations = {
       loginError: "Login failed. Please check your credentials.",
       signupError: "Sign up failed. Please try again.",
       logoutSuccess: "Logged out successfully",
+
+      // Welcome Back / Create Account headings
+      welcomeBack: "Welcome Back",
+      signInSubtitle: "Sign in to manage your APIs and credits.",
+      createAccountTitle: "Create Account",
+      createAccountSubtitle: "Get 200 free credits and start building instantly.",
+
+      // Loading states
+      loggingIn: "Signing in...",
+      signingUp: "Creating account...",
+
+      // Reset password
+      resetPasswordTitle: "Reset Password",
+      resetPasswordSubtitle: "Enter your email and we'll send you a link to reset your password.",
+      sendResetLink: "Send Reset Link",
+      sendingResetLink: "Sending...",
+      resetEmailSent: "Check your inbox — we've sent a password reset link to your email.",
+      backToLogin: "Back to login",
+      resetPasswordError: "Couldn't send reset email. Please check the address and try again.",
     },
 
     // Website Generation specific
@@ -559,6 +579,7 @@ export const translations = {
       login: "เข้าสู่ระบบ",
       signup: "ลงทะเบียน",
       email: "อีเมล",
+      emailAddress: "ที่อยู่อีเมล",
       password: "รหัสผ่าน",
       confirmPassword: "ยืนยันรหัสผ่าน",
       rememberMe: "จำฉันไว้",
@@ -577,6 +598,25 @@ export const translations = {
       loginError: "การเข้าสู่ระบบล้มเหลว โปรดตรวจสอบข้อมูลประจำตัวของคุณ",
       signupError: "การลงทะเบียนล้มเหลว โปรดลองอีกครั้ง",
       logoutSuccess: "ออกจากระบบสำเร็จ",
+
+      // Welcome Back / Create Account headings
+      welcomeBack: "ยินดีต้อนรับกลับ",
+      signInSubtitle: "เข้าสู่ระบบเพื่อจัดการ API และเครดิตของคุณ",
+      createAccountTitle: "สร้างบัญชีใหม่",
+      createAccountSubtitle: "รับเครดิตฟรี 200 เครดิต เริ่มสร้างได้ทันที",
+
+      // Loading states
+      loggingIn: "กำลังเข้าสู่ระบบ...",
+      signingUp: "กำลังสร้างบัญชี...",
+
+      // Reset password
+      resetPasswordTitle: "รีเซ็ตรหัสผ่าน",
+      resetPasswordSubtitle: "กรอกอีเมลของคุณ เราจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ให้",
+      sendResetLink: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
+      sendingResetLink: "กำลังส่ง...",
+      resetEmailSent: "ตรวจสอบกล่องอีเมลของคุณ — เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่แล้ว",
+      backToLogin: "กลับไปหน้าเข้าสู่ระบบ",
+      resetPasswordError: "ส่งอีเมลไม่สำเร็จ โปรดตรวจสอบอีเมลแล้วลองใหม่อีกครั้ง",
     },
 
     // Website Generation specific

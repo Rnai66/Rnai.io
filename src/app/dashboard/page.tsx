@@ -34,19 +34,19 @@ export default function DashboardPage() {
   const th = language === "th";
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
       if (!user) {
         router.push("/auth/login");
-      } else {
-        setEmail(user.email);
-        try {
-          const billingRes = await fetch("/api/billing/me");
-          if (billingRes.ok) setBilling(await billingRes.json());
-        } catch (e) {
-          console.error("Failed to fetch dashboard data", e);
-        }
-        setReady(true);
+        return;
       }
+      setEmail(user.email);
+      // Render the dashboard shell immediately once auth resolves —
+      // don't block on billing data, it fills in a moment later.
+      setReady(true);
+      fetch("/api/billing/me")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => data && setBilling(data))
+        .catch((e) => console.error("Failed to fetch dashboard data", e));
     });
     return unsub;
   }, [router]);
