@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/firebase/verifyToken";
 import { validateApiKey } from "@/lib/firebase/validateKey";
-import { requiredString, validateJson } from "@/lib/api/validation";
 import { ratelimit } from "@/lib/ratelimit";
 import { getAdminDb } from "@/lib/firebase/admin";
 import {
@@ -23,15 +22,41 @@ const SYSTEM =
 // Allow time for a cold-start of the scale-to-zero Modal container.
 export const maxDuration = 60;
 
-async function callGemini(message: string) {
+type Turn = { role: "user" | "assistant"; content: string };
+
+// Keep prior-turn context bounded — protects both the request payload and
+// the token/quota cost of a single call from growing without limit.
+const MAX_HISTORY_TURNS = 12; // ~6 back-and-forth exchanges
+const MAX_HISTORY_CHARS = 4000; // per stored turn
+
+/** Pull a sane, capped `history` array out of an untrusted request body. */
+function parseHistory(raw: unknown): Turn[] {
+  if (!Array.isArray(raw)) return [];
+  const turns: Turn[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const role = (item as { role?: unknown }).role;
+    const content = (item as { content?: unknown }).content;
+    if ((role !== "user" && role !== "assistant") || typeof content !== "string") continue;
+    if (!content.trim()) continue;
+    turns.push({ role, content: content.slice(0, MAX_HISTORY_CHARS) });
+  }
+  return turns.slice(-MAX_HISTORY_TURNS);
+}
+
+async function callGemini(message: string, history: Turn[] = []) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
+  const contents = [
+    ...history.map((t) => ({ role: t.role === "assistant" ? "model" : "user", parts: [{ text: t.content }] })),
+    { role: "user", parts: [{ text: message }] },
+  ];
   const res = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: message }] }] }),
+      body: JSON.stringify({ contents }),
     }
   );
   if (!res.ok) {
@@ -68,11 +93,23 @@ export async function POST(req: NextRequest) {
     const { success } = await ratelimit.limit(`rnai:${uid}`);
     if (!success) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-    const parsed = await validateJson<{ message: string }>(req, {
-      message: requiredString({ min: 1, max: 12000 }),
-    });
-    if (parsed.response) return parsed.response;
-    const message = parsed.data.message;
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Request body must be valid JSON" }, { status: 400 });
+    }
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
+    }
+    const rawMessage = (body as { message?: unknown }).message;
+    const message = typeof rawMessage === "string" ? rawMessage.trim() : "";
+    if (!message || message.length < 1 || message.length > 12000) {
+      return NextResponse.json({ error: "message is required (1-12000 characters)" }, { status: 400 });
+    }
+    // Optional prior turns (client-supplied) so multi-turn context survives —
+    // e.g. Rnai-CLI's Cowork UI sends the running conversation for a session.
+    const history = parseHistory((body as { history?: unknown }).history);
 
     // Eligibility + monthly quota (single user-doc read).
     const userSnap = await getAdminDb().collection("users").doc(uid).get();
@@ -102,6 +139,7 @@ export async function POST(req: NextRequest) {
             model: process.env.SELF_VLLM_MODEL ?? "rnai-llm",
             messages: [
               { role: "system", content: SYSTEM },
+              ...history,
               { role: "user", content: message },
             ],
             temperature: 0.6,
@@ -133,7 +171,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fallback → free Gemini (quota exhausted, not a paying member, or model down).
-    const geminiText = await callGemini(message);
+    const geminiText = await callGemini(message, history);
     if (geminiText == null) {
       return NextResponse.json({ error: "Chat is temporarily unavailable" }, { status: 503 });
     }
