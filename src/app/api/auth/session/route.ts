@@ -29,12 +29,25 @@ export async function POST(req: NextRequest) {
 
     const adminAuth = getAdminAuth();
     const decodedToken = await adminAuth.verifyIdToken(idToken);
-    
-    // Initialize user doc if it doesn't exist
+
     const db = getAdminDb();
     const userRef = db.collection("users").doc(decodedToken.uid);
-    const userDoc = await userRef.get();
-    
+
+    // Set session expiration to 5 days
+    const expiresIn = 60 * 60 * 24 * 5 * 1000;
+
+    // The Firestore "does this user doc exist" check and minting the
+    // session cookie are independent of each other (both only need the
+    // already-verified idToken/uid) — run them in parallel instead of one
+    // after another. This was the biggest chunk of the "login takes
+    // forever" latency: every login paid for both round-trips in serial
+    // even though neither depends on the other's result.
+    const [userDoc, sessionCookie] = await Promise.all([
+      userRef.get(),
+      adminAuth.createSessionCookie(idToken, { expiresIn }),
+    ]);
+
+    // First-time login only: grant the free-credit welcome bonus.
     if (!userDoc.exists) {
       await userRef.set({
         email: decodedToken.email,
@@ -53,13 +66,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Set session expiration to 5 days
-    const expiresIn = 60 * 60 * 24 * 5 * 1000;
-
-    
-    // Create the session cookie
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
-    
     const response = NextResponse.json({ status: "success" }, { status: 200 });
     
     // Set the cookie with httpOnly and secure flags
